@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Star, Menu, X } from "lucide-react"
 import { useState, useEffect, useRef } from 'react'
 import { useRegistration } from "@/components/registration-context"
+import { useAuth } from "@/components/auth-context"
 import Cookies from 'js-cookie'
 import { ProfileDropdown } from "@/components/profile-dropdown"
 
@@ -13,6 +14,7 @@ export function HeroSection() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [userInfo, setUserInfo] = useState<{ email?: string; name?: string } | null>(null)
   const { openModal } = useRegistration()
+  const { openLoginModal, openRegisterModal } = useAuth()
   const sectionRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
@@ -59,23 +61,22 @@ export function HeroSection() {
     return () => observer.disconnect()
   }, [])
 
-  // Check if user is logged in (has access token)
+  // Check if user is logged in (has access token or isAuthenticated cookie)
   useEffect(() => {
     const checkAuthStatus = () => {
+      const isAuth = Cookies.get('isAuthenticated') === 'true'
       const token = Cookies.get('accessToken')
-      const loggedIn = !!token
+      const loggedIn = isAuth || !!token
       setIsLoggedIn(loggedIn)
       
-      // If logged in, try to get user info from localStorage or cookies
-      if (loggedIn && !userInfo) {
-        // You can fetch user info from API here if needed
-        // For now, we'll just set basic info if available
+      // If logged in, try to get user info from cookies
+      if (loggedIn) {
         const email = Cookies.get('userEmail')
         const name = Cookies.get('userName')
         if (email || name) {
           setUserInfo({ email: email || undefined, name: name || undefined })
         }
-      } else if (!loggedIn) {
+      } else {
         setUserInfo(null)
       }
     }
@@ -85,7 +86,7 @@ export function HeroSection() {
     const interval = setInterval(checkAuthStatus, 1000)
 
     return () => clearInterval(interval)
-  }, [userInfo])
+  }, [])
 
   return (
     <section 
@@ -149,14 +150,13 @@ export function HeroSection() {
               userName={userInfo?.name}
             />
           ) : (
-            <a href="/login">
-              <Button 
-                className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-lg text-lg font-semibold cursor-pointer" 
-                style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}
-              >
-                Login
-              </Button>
-            </a>
+            <Button 
+              onClick={openLoginModal}
+              className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-lg text-lg font-semibold cursor-pointer" 
+              style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}
+            >
+              Login
+            </Button>
           )}
         </div>
 
@@ -168,14 +168,13 @@ export function HeroSection() {
               userName={userInfo?.name}
             />
           ) : (
-            <a href="/login">
-              <Button 
-                className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer" 
-                style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}
-              >
-                Login
-              </Button>
-            </a>
+            <Button 
+              onClick={openLoginModal}
+              className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer" 
+              style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}
+            >
+              Login
+            </Button>
           )}
           <button
             aria-label="Toggle menu"

@@ -2,10 +2,13 @@ import type { Metadata } from 'next'
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import { Analytics } from '@vercel/analytics/next'
-import { PromotionalBanner } from '@/components/promotional-banner'
+import { AdBanner } from '@/components/ad-banner'
 import { RegistrationProvider } from '@/components/registration-context'
+import { AuthProvider } from '@/components/auth-context'
 import { ClientModalWrapper } from '@/components/client-modal-wrapper'
 import { QueryProvider } from '@/components/query-provider'
+import { LoginModal } from '@/components/login-modal'
+import { RegisterModal } from '@/components/register-modal'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -24,9 +27,13 @@ export default function RootLayout({
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
         <QueryProvider>
           <RegistrationProvider>
-            <PromotionalBanner />
-            {children}
-            <ClientModalWrapper />
+            <AuthProvider>
+              <AdBanner />
+              {children}
+              <ClientModalWrapper />
+              <LoginModal />
+              <RegisterModal />
+            </AuthProvider>
           </RegistrationProvider>
         </QueryProvider>
         <Analytics />

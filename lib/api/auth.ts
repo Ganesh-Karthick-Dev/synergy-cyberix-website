@@ -9,7 +9,8 @@ import Cookies from 'js-cookie'
 
 /**
  * Login user with email and password
- * Saves access token and refresh token to cookies
+ * Backend sets accessToken and refreshToken as HTTP-only cookies automatically
+ * We only need to save user info to readable cookies for display purposes
  */
 export const loginUser = async (credentials: LoginCredentials): Promise<LoginResponse> => {
   try {
@@ -20,44 +21,23 @@ export const loginUser = async (credentials: LoginCredentials): Promise<LoginRes
     
     const data = response.data
     
-    // Extract and save access token to cookies
-    const accessToken = data.accessToken || data.access_token || data.token
-    if (accessToken) {
-      Cookies.set('accessToken', accessToken, {
-        expires: 7, // 7 days
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        path: '/',
-      })
-      console.log('[Auth] Access token saved to cookie')
-    } else {
-      console.warn('[Auth] No access token found in response:', data)
-    }
+    // Note: Backend sets accessToken and refreshToken as HTTP-only cookies
+    // These cannot be read by JavaScript, but they are automatically sent with requests
+    // We can check if authentication was successful by checking the isAuthenticated cookie
     
-    // Extract and save refresh token to cookies (if provided)
-    const refreshToken = data.refreshToken || data.refresh_token
-    if (refreshToken) {
-      Cookies.set('refreshToken', refreshToken, {
-        expires: 30, // 30 days
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        path: '/',
-      })
-      console.log('[Auth] Refresh token saved to cookie')
-    }
-    
-    // Save user info to cookies for profile display
-    if (data.user) {
-      if (data.user.email) {
-        Cookies.set('userEmail', data.user.email, {
+    // Save user info to readable cookies for profile display (optional)
+    if (data.data?.user) {
+      const user = data.data.user
+      if (user.email) {
+        Cookies.set('userEmail', user.email, {
           expires: 7,
           secure: process.env.NODE_ENV === 'production',
           sameSite: 'strict',
           path: '/',
         })
       }
-      if (data.user.firstName || data.user.lastName) {
-        const fullName = `${data.user.firstName || ''} ${data.user.lastName || ''}`.trim()
+      if (user.firstName || user.lastName) {
+        const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim()
         if (fullName) {
           Cookies.set('userName', fullName, {
             expires: 7,
@@ -70,6 +50,7 @@ export const loginUser = async (credentials: LoginCredentials): Promise<LoginRes
       console.log('[Auth] User info saved to cookies')
     }
     
+    console.log('[Auth] Login successful - tokens set as HTTP-only cookies by backend')
     return data
   } catch (error) {
     console.error('[Auth] Login error:', error)
@@ -79,61 +60,83 @@ export const loginUser = async (credentials: LoginCredentials): Promise<LoginRes
 
 /**
  * Register new user
+ * Backend sends registration confirmation and user data
  */
 export const registerUser = async (payload: RegisterPayload): Promise<RegisterResponse> => {
-  const response = await apiClient.post<RegisterResponse>(
-    API_CONFIG.ENDPOINTS.AUTH.REGISTER,
-    payload
-  )
-  return response.data
+  try {
+    const response = await apiClient.post<RegisterResponse>(
+      API_CONFIG.ENDPOINTS.AUTH.REGISTER,
+      payload
+    )
+    console.log('[Auth] Registration successful')
+    return response.data
+  } catch (error) {
+    console.error('[Auth] Registration error:', error)
+    throw error
+  }
 }
 
 /**
- * Logout user (clears tokens from cookies)
+ * Logout user
+ * Backend clears HTTP-only cookies (accessToken, refreshToken)
+ * We clear readable cookies locally
  */
 export const logoutUser = async (): Promise<void> => {
   try {
-    // Call logout endpoint if available
+    // Call logout endpoint - backend will clear HTTP-only cookies
     await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.LOGOUT)
+    console.log('[Auth] Logout successful - backend cleared HTTP-only cookies')
   } catch (error) {
-    console.warn('[Auth] Logout endpoint failed, clearing cookies locally:', error)
+    console.warn('[Auth] Logout endpoint failed, clearing local cookies:', error)
   } finally {
-    // Always clear cookies regardless of API call result
+    // Always clear readable cookies regardless of API call result
     Cookies.remove('accessToken', { path: '/' })
     Cookies.remove('refreshToken', { path: '/' })
+    Cookies.remove('isAuthenticated', { path: '/' })
     Cookies.remove('userEmail', { path: '/' })
     Cookies.remove('userName', { path: '/' })
-    console.log('[Auth] All auth cookies cleared')
+    console.log('[Auth] All readable auth cookies cleared')
   }
 }
 
 /**
  * Refresh access token using refresh token
+ * Backend handles token refresh via HTTP-only cookies
  */
 export const refreshAccessToken = async (): Promise<LoginResponse> => {
-  const refreshToken = Cookies.get('refreshToken')
-  
-  if (!refreshToken) {
-    throw new Error('No refresh token available')
+  try {
+    // Backend reads refreshToken from HTTP-only cookie automatically
+    // We don't need to send it in the request body
+    const response = await apiClient.post<LoginResponse>(API_CONFIG.ENDPOINTS.AUTH.REFRESH)
+    
+    console.log('[Auth] Access token refreshed - backend set new tokens as HTTP-only cookies')
+    return response.data
+  } catch (error) {
+    console.error('[Auth] Token refresh error:', error)
+    throw error
   }
-  
-  const response = await apiClient.post<LoginResponse>(API_CONFIG.ENDPOINTS.AUTH.REFRESH, {
-    refreshToken,
-  })
-  
-  const data = response.data
-  const accessToken = data.accessToken || data.access_token || data.token
-  
-  if (accessToken) {
-    Cookies.set('accessToken', accessToken, {
-      expires: 7,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      path: '/',
-    })
-    console.log('[Auth] Access token refreshed and saved to cookie')
-  }
-  
-  return data
+}
+
+/**
+ * Check if user is authenticated
+ * Checks for isAuthenticated cookie set by backend
+ */
+export const isAuthenticated = (): boolean => {
+  if (typeof window === 'undefined') return false
+  return Cookies.get('isAuthenticated') === 'true'
+}
+
+/**
+ * Get user email from cookie (if available)
+ */
+export const getUserEmail = (): string | undefined => {
+  return Cookies.get('userEmail')
+}
+
+/**
+ * Get user name from cookie (if available)
+ */
+export const getUserName = (): string | undefined => {
+  return Cookies.get('userName')
 }
 
