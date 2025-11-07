@@ -5,10 +5,26 @@ import { useQuery } from '@tanstack/react-query'
 import { getActiveAds } from '@/lib/api/website'
 import { trackAdImpression, trackAdClick, type Ad } from '@/lib/api/ads'
 import { X } from 'lucide-react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
 export function AdBanner() {
   const [isVisible, setIsVisible] = useState(true)
   const [hasTrackedImpressions, setHasTrackedImpressions] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(true) // For mobile modal
+  const [isModalClosed, setIsModalClosed] = useState(false) // Track if user explicitly closed the modal
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024) // lg breakpoint
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   // Fetch active ads
   const { data: ads = [], isLoading, error } = useQuery({
@@ -35,9 +51,16 @@ export function AdBanner() {
     return true
   })
 
+  // Open modal automatically on mobile when ads are available (only if user hasn't closed it)
+  useEffect(() => {
+    if (isMobile && activeAds.length > 0 && !isModalOpen && !isModalClosed) {
+      setIsModalOpen(true)
+    }
+  }, [isMobile, activeAds.length, isModalOpen, isModalClosed])
+
   // Track impressions when ads are displayed
   useEffect(() => {
-    if (activeAds.length > 0 && !hasTrackedImpressions && isVisible) {
+    if (activeAds.length > 0 && !hasTrackedImpressions && (isVisible || isModalOpen)) {
       console.log(`[AdBanner] Tracking impressions for ${activeAds.length} ad(s)`)
       activeAds.forEach((ad: Ad) => {
         trackAdImpression(ad.id).catch((error) => {
@@ -46,11 +69,11 @@ export function AdBanner() {
       })
       setHasTrackedImpressions(true)
     }
-  }, [activeAds, hasTrackedImpressions, isVisible])
+  }, [activeAds, hasTrackedImpressions, isVisible, isModalOpen])
 
-  // Update body padding when banner visibility changes
+  // Update body padding when banner visibility changes (desktop only)
   useEffect(() => {
-    if (isVisible && activeAds.length > 0) {
+    if (!isMobile && isVisible && activeAds.length > 0) {
       document.body.style.paddingTop = '48px'
     } else {
       document.body.style.paddingTop = '0px'
@@ -59,7 +82,7 @@ export function AdBanner() {
     return () => {
       document.body.style.paddingTop = '0px'
     }
-  }, [isVisible, activeAds.length])
+  }, [isVisible, activeAds.length, isMobile])
 
   // Handle ad click
   const handleAdClick = async (ad: Ad) => {
@@ -111,14 +134,88 @@ export function AdBanner() {
     return null
   }
 
-  // Don't render if user closed the banner
-  if (!isVisible) {
+  // Don't render if user closed the banner (desktop only)
+  if (!isMobile && !isVisible) {
     console.log('[AdBanner] Banner closed by user')
     return null
   }
 
-  console.log(`[AdBanner] Rendering banner with ${activeAds.length} ad(s)`)
+  // Don't render if user closed the modal (mobile only)
+  if (isMobile && (isModalClosed || !isModalOpen)) {
+    console.log('[AdBanner] Modal closed by user')
+    return null
+  }
 
+  console.log(`[AdBanner] Rendering ${isMobile ? 'modal' : 'banner'} with ${activeAds.length} ad(s)`)
+
+  // Handle modal close
+  const handleModalClose = (open: boolean) => {
+    setIsModalOpen(open)
+    if (!open) {
+      setIsModalClosed(true) // Mark as closed by user
+    }
+  }
+
+  // Mobile: Show as modal popup
+  if (isMobile) {
+    return (
+      <Dialog open={isModalOpen && !isModalClosed} onOpenChange={handleModalClose}>
+        <DialogContent className="!max-w-[90vw] sm:!max-w-md w-full bg-gradient-to-br from-gray-900 via-gray-800 to-black border-2 border-orange-500/30 shadow-2xl shadow-orange-500/20 p-6">
+          <DialogHeader className="space-y-4">
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-2xl font-bold text-white" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '700' }}>
+                Special Offer
+              </DialogTitle>
+              <button
+                onClick={() => handleModalClose(false)}
+                className="text-white/70 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {activeAds.map((ad) => (
+              <div
+                key={ad.id}
+                className="bg-gradient-to-r from-orange-500/10 to-orange-600/10 border border-orange-500/30 rounded-lg p-4 space-y-3"
+              >
+                <h3 
+                  className="text-xl font-bold text-orange-400" 
+                  style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '700' }}
+                >
+                  {ad.title}
+                </h3>
+                <p className="text-gray-300 text-sm leading-relaxed" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}>
+                  {ad.content}
+                </p>
+                {ad.link && (
+                  <button
+                    onClick={() => handleAdClick(ad)}
+                    className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg shadow-orange-500/30"
+                    style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}
+                  >
+                    Learn More →
+                  </button>
+                )}
+                <button
+                  onClick={() => handleModalClose(false)}
+                  className="w-full bg-white/10 hover:bg-white/20 text-white font-medium py-2.5 px-6 rounded-lg transition-all duration-300 border border-white/20"
+                  style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '500' }}
+                >
+                  Maybe Later
+                </button>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+    )
+  }
+
+  // Desktop: Show as banner (current behavior)
   return (
     <>
       <div 

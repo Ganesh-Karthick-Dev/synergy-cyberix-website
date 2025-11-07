@@ -9,6 +9,8 @@ import { ClientModalWrapper } from '@/components/client-modal-wrapper'
 import { QueryProvider } from '@/components/query-provider'
 import { LoginModal } from '@/components/login-modal'
 import { RegisterModal } from '@/components/register-modal'
+import { ScrollToTop } from '@/components/scroll-to-top'
+import { Chatbot } from '@/components/chatbot'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -33,6 +35,8 @@ export default function RootLayout({
               <ClientModalWrapper />
               <LoginModal />
               <RegisterModal />
+              <ScrollToTop />
+              <Chatbot />
             </AuthProvider>
           </RegistrationProvider>
         </QueryProvider>

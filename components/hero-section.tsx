@@ -112,7 +112,7 @@ export function HeroSection() {
       
       {/* Navigation Header */}
       <header 
-        className="fixed left-0 right-0 z-40 flex items-center justify-between py-3 px-6 lg:px-12 bg-black/20 backdrop-blur-md border-b border-white/10"
+        className="fixed left-0 right-0 z-40 flex items-center justify-between py-1 px-6 lg:px-12 bg-black/20 backdrop-blur-md border-b border-white/10 "
         style={{ top: `${bannerHeight}px` }}
       >
         <div className="flex items-center">
@@ -126,19 +126,80 @@ export function HeroSection() {
         </div>
 
         {/* Desktop Nav (large screens only) */}
-        <nav className="hidden lg:flex items-center space-x-10">
-          <a href="#" className="text-white hover:text-orange-400 transition-colors text-lg font-medium" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '500' }}>
-            Home
+        <nav className="hidden lg:flex items-center space-x-12">
+          <a 
+            href="#" 
+            className="relative text-white hover:text-orange-400 transition-all duration-300 text-lg font-semibold group overflow-hidden px-2 py-1"
+            style={{ 
+              fontFamily: 'Orbitron, sans-serif', 
+              fontWeight: '600',
+              textShadow: '0 0 10px rgba(255, 255, 255, 0.3), 0 0 20px rgba(255, 255, 255, 0.1)',
+            }}
+          >
+            <span className="relative z-10">Home</span>
+            {/* Scanning effect on hover */}
+            <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 to-orange-600/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out"></div>
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-orange-600 group-hover:w-full transition-all duration-300"></span>
           </a>
           
-          <a href="#about-us" className="text-white hover:text-orange-400 transition-colors text-lg font-medium" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '500' }}>
-            About us
+          <a 
+            href="#about-us" 
+            className="relative text-white hover:text-orange-400 transition-all duration-300 text-lg font-semibold group overflow-hidden px-2 py-1"
+            style={{ 
+              fontFamily: 'Orbitron, sans-serif', 
+              fontWeight: '600',
+              textShadow: '0 0 10px rgba(255, 255, 255, 0.3), 0 0 20px rgba(255, 255, 255, 0.1)',
+            }}
+          >
+            <span className="relative z-10">About us</span>
+            {/* Scanning effect on hover */}
+            <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 to-orange-600/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out"></div>
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-orange-600 group-hover:w-full transition-all duration-300"></span>
           </a>
-          <a href="#why-choose" className="text-white hover:text-orange-400 transition-colors text-lg font-medium" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '500' }}>
-            Services
+          
+          <a 
+            href="#why-choose" 
+            className="relative text-white hover:text-orange-400 transition-all duration-300 text-lg font-semibold group overflow-hidden px-2 py-1"
+            style={{ 
+              fontFamily: 'Orbitron, sans-serif', 
+              fontWeight: '600',
+              textShadow: '0 0 10px rgba(255, 255, 255, 0.3), 0 0 20px rgba(255, 255, 255, 0.1)',
+            }}
+          >
+            <span className="relative z-10">Services</span>
+            {/* Scanning effect on hover */}
+            <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 to-orange-600/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out"></div>
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-orange-600 group-hover:w-full transition-all duration-300"></span>
           </a>
-          <a href="#warning" className="text-white hover:text-orange-400 transition-colors text-lg font-medium" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '500' }}>
-            Contact us
+          
+          <a 
+            href="#warning" 
+            className="relative text-white hover:text-orange-400 transition-all duration-300 text-lg font-semibold group overflow-hidden px-2 py-1"
+            style={{ 
+              fontFamily: 'Orbitron, sans-serif', 
+              fontWeight: '600',
+              textShadow: '0 0 10px rgba(255, 255, 255, 0.3), 0 0 20px rgba(255, 255, 255, 0.1)',
+            }}
+          >
+            <span className="relative z-10">Contact us</span>
+            {/* Scanning effect on hover */}
+            <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 to-orange-600/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out"></div>
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-orange-600 group-hover:w-full transition-all duration-300"></span>
+          </a>
+          
+          <a 
+            href="/download" 
+            className="relative text-white hover:text-orange-400 transition-all duration-300 text-lg font-semibold group overflow-hidden px-2 py-1"
+            style={{ 
+              fontFamily: 'Orbitron, sans-serif', 
+              fontWeight: '600',
+              textShadow: '0 0 10px rgba(255, 255, 255, 0.3), 0 0 20px rgba(255, 255, 255, 0.1)',
+            }}
+          >
+            <span className="relative z-10">Download</span>
+            {/* Scanning effect on hover */}
+            <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 to-orange-600/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out"></div>
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-orange-600 group-hover:w-full transition-all duration-300"></span>
           </a>
         </nav>
 
@@ -189,11 +250,77 @@ export function HeroSection() {
       {/* Mobile Menu Panel */}
       {mobileNavOpen && (
         <div className="fixed left-0 right-0 z-30 mt-[calc(48px+var(--banner-offset,0px))] lg:hidden" style={{ top: `${bannerHeight + 56}px` }}>
-          <div className="mx-4 rounded-lg bg-black/80 backdrop-blur-md border border-white/10 p-4 space-y-3">
-            <a onClick={() => setMobileNavOpen(false)} href="#" className="block text-white text-base">Home</a>
-            <a onClick={() => setMobileNavOpen(false)} href="#about-us" className="block text-white text-base">About us</a>
-            <a onClick={() => setMobileNavOpen(false)} href="#why-choose" className="block text-white text-base">Services</a>
-            <a onClick={() => setMobileNavOpen(false)} href="#warning" className="block text-white text-base">Contact us</a>
+          <div className="mx-4 rounded-lg bg-black/90 backdrop-blur-md border border-white/20 shadow-xl shadow-orange-500/10 p-6 space-y-4">
+            <a 
+              onClick={() => setMobileNavOpen(false)} 
+              href="#" 
+              className="relative block text-white hover:text-orange-400 transition-all duration-300 text-base font-semibold py-2 border-b border-white/10 hover:border-orange-500/50 overflow-hidden group"
+              style={{ 
+                fontFamily: 'Orbitron, sans-serif', 
+                fontWeight: '600',
+                textShadow: '0 0 10px rgba(255, 255, 255, 0.3), 0 0 20px rgba(255, 255, 255, 0.1)',
+              }}
+            >
+              <span className="relative z-10">Home</span>
+              {/* Scanning effect on hover */}
+              <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 to-orange-600/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out"></div>
+            </a>
+            <a 
+              onClick={() => setMobileNavOpen(false)} 
+              href="#about-us" 
+              className="relative block text-white hover:text-orange-400 transition-all duration-300 text-base font-semibold py-2 border-b border-white/10 hover:border-orange-500/50 overflow-hidden group"
+              style={{ 
+                fontFamily: 'Orbitron, sans-serif', 
+                fontWeight: '600',
+                textShadow: '0 0 10px rgba(255, 255, 255, 0.3), 0 0 20px rgba(255, 255, 255, 0.1)',
+              }}
+            >
+              <span className="relative z-10">About us</span>
+              {/* Scanning effect on hover */}
+              <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 to-orange-600/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out"></div>
+            </a>
+            <a 
+              onClick={() => setMobileNavOpen(false)} 
+              href="#why-choose" 
+              className="relative block text-white hover:text-orange-400 transition-all duration-300 text-base font-semibold py-2 border-b border-white/10 hover:border-orange-500/50 overflow-hidden group"
+              style={{ 
+                fontFamily: 'Orbitron, sans-serif', 
+                fontWeight: '600',
+                textShadow: '0 0 10px rgba(255, 255, 255, 0.3), 0 0 20px rgba(255, 255, 255, 0.1)',
+              }}
+            >
+              <span className="relative z-10">Services</span>
+              {/* Scanning effect on hover */}
+              <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 to-orange-600/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out"></div>
+            </a>
+            <a 
+              onClick={() => setMobileNavOpen(false)} 
+              href="#warning" 
+              className="relative block text-white hover:text-orange-400 transition-all duration-300 text-base font-semibold py-2 border-b border-white/10 hover:border-orange-500/50 overflow-hidden group"
+              style={{ 
+                fontFamily: 'Orbitron, sans-serif', 
+                fontWeight: '600',
+                textShadow: '0 0 10px rgba(255, 255, 255, 0.3), 0 0 20px rgba(255, 255, 255, 0.1)',
+              }}
+            >
+              <span className="relative z-10">Contact us</span>
+              {/* Scanning effect on hover */}
+              <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 to-orange-600/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out"></div>
+            </a>
+            <a 
+              onClick={() => setMobileNavOpen(false)} 
+              href="/download" 
+              className="relative block text-white hover:text-orange-400 transition-all duration-300 text-base font-semibold py-2 overflow-hidden group"
+              style={{ 
+                fontFamily: 'Orbitron, sans-serif', 
+                fontWeight: '600',
+                textShadow: '0 0 10px rgba(255, 255, 255, 0.3), 0 0 20px rgba(255, 255, 255, 0.1)',
+              }}
+            >
+              <span className="relative z-10">Download</span>
+              {/* Scanning effect on hover */}
+              <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 to-orange-600/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out"></div>
+            </a>
             {isLoggedIn && (
               <div className="pt-2 border-t border-white/10">
                 <ProfileDropdown 

@@ -1,7 +1,7 @@
 "use client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Download, Monitor, Laptop, Terminal, Square } from "lucide-react"
+import { Download } from "lucide-react"
 import { FooterSection } from "@/components/footer-section"
 
 export default function DownloadPage() {
@@ -76,8 +76,12 @@ export default function DownloadPage() {
           {/* Windows Download */}
           <Card className="bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl hover:shadow-orange-500/20 transition-all duration-300 hover:scale-105 animate-slide-up" style={{ animationDelay: '0.6s' }}>
             <CardHeader className="text-center">
-              <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Square className="w-8 h-8 text-white" />
+              <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                <img 
+                  src="/logo/download/icons8-windows-10-96.webp" 
+                  alt="Windows Logo" 
+                  className="w-full h-full object-contain"
+                />
               </div>
               <CardTitle className="text-2xl font-bold text-white" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}>Windows</CardTitle>
               <CardDescription className="text-gray-300" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}>
@@ -85,10 +89,10 @@ export default function DownloadPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="text-center">
-              <p className="text-gray-400 mb-6" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}>Version 2.1.0 • 45.2 MB</p>
+              <p className="text-gray-400 mb-6" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}>Version 2.1.0 • 128 MB</p>
               <Button 
                 onClick={() => handleDownload('Windows')}
-                className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-3 rounded-lg transition-all duration-300 hover:scale-105 cursor-pointer"
+                className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-5 rounded-lg transition-all duration-300 hover:scale-105 cursor-pointer"
                 style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}
               >
                 <Download className="w-5 h-5 mr-2" />
@@ -98,7 +102,7 @@ export default function DownloadPage() {
           </Card>
 
           {/* Mac Download */}
-          <Card className="bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl hover:shadow-orange-500/20 transition-all duration-300 hover:scale-105 animate-slide-up" style={{ animationDelay: '0.8s' }}>
+          {/* <Card className="bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl hover:shadow-orange-500/20 transition-all duration-300 hover:scale-105 animate-slide-up" style={{ animationDelay: '0.8s' }}>
             <CardHeader className="text-center">
               <div className="w-16 h-16 bg-gray-600 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Laptop className="w-8 h-8 text-white" />
@@ -119,13 +123,17 @@ export default function DownloadPage() {
                 Download for macOS
               </Button>
             </CardContent>
-          </Card>
+          </Card> */}
 
           {/* Linux Download */}
           <Card className="bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl hover:shadow-orange-500/20 transition-all duration-300 hover:scale-105 animate-slide-up" style={{ animationDelay: '1.0s' }}>
             <CardHeader className="text-center">
-              <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Terminal className="w-8 h-8 text-white" />
+              <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                <img 
+                  src="/logo/download/icons8-linux-48.webp" 
+                  alt="Linux Logo" 
+                  className="w-full h-full object-contain"
+                />
               </div>
               <CardTitle className="text-2xl font-bold text-white" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}>Linux</CardTitle>
               <CardDescription className="text-gray-300" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}>
@@ -133,10 +141,10 @@ export default function DownloadPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="text-center">
-              <p className="text-gray-400 mb-6" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}>Version 2.1.0 • 38.7 MB</p>
+              <p className="text-gray-400 mb-6" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}>Version 2.1.0 • 120 MB</p>
               <Button 
                 onClick={() => handleDownload('Linux')}
-                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold py-3 rounded-lg transition-all duration-300 hover:scale-105 cursor-pointer"
+                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold py-5 rounded-lg transition-all duration-300 hover:scale-105 cursor-pointer"
                 style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}
               >
                 <Download className="w-5 h-5 mr-2" />
