@@ -4,6 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Download } from "lucide-react"
 import { FooterSection } from "@/components/footer-section"
 
+export const dynamic = 'force-dynamic'
+
 export default function DownloadPage() {
   const handleDownload = (platform: string) => {
     // Simulate download - in real app, this would trigger actual download

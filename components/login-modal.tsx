@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Eye, EyeOff } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useMutation } from '@tanstack/react-query'
 import { loginUser, API_CONFIG } from '@/lib/api'
 import type { ApiError } from '@/lib/api/types'
@@ -12,7 +12,7 @@ import { useAuth } from "@/components/auth-context"
 import { useSearchParams } from 'next/navigation'
 import { AuthCarousel } from "@/components/auth-carousel"
 
-export function LoginModal() {
+function LoginModalContent() {
   const { isLoginModalOpen, closeLoginModal, switchToRegister } = useAuth()
   const searchParams = useSearchParams()
   const [formData, setFormData] = useState({
@@ -342,6 +342,14 @@ export function LoginModal() {
         </div>
       </DialogContent>
     </Dialog>
+  )
+}
+
+export function LoginModal() {
+  return (
+    <Suspense fallback={null}>
+      <LoginModalContent />
+    </Suspense>
   )
 }
 

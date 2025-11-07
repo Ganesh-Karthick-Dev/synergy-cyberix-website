@@ -22,33 +22,6 @@ export interface Ad {
 }
 
 /**
- * Get active ads for website display
- * Uses Next.js API route for better caching and security
- */
-export const getActiveAds = async (): Promise<Ad[]> => {
-  try {
-    // Use Next.js API route instead of direct backend call
-    const response = await fetch('/api/ads/active', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      cache: 'no-store',
-    })
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch active ads: ${response.statusText}`)
-    }
-
-    const data: ApiResponse<Ad[]> = await response.json()
-    return data.data || []
-  } catch (error) {
-    console.error('[Ads] Error fetching active ads:', error)
-    return []
-  }
-}
-
-/**
  * Track ad impression (when ad is displayed)
  */
 export const trackAdImpression = async (adId: string): Promise<void> => {

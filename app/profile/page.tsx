@@ -14,6 +14,8 @@ import { SubscriptionTab } from "@/components/profile/subscription-tab"
 import { NotificationsTab } from "@/components/profile/notifications-tab"
 import { SupportTab } from "@/components/profile/support-tab"
 
+export const dynamic = 'force-dynamic'
+
 interface UserInfo {
   email?: string
   name?: string

@@ -13,6 +13,8 @@ import { WarningSection } from "@/components/warning-section"
 import { FAQSection } from "@/components/faq-section"
 import { FooterSection } from "@/components/footer-section"
 
+export const dynamic = 'force-dynamic'
+
 export default function Home() {
   return (
     <main>

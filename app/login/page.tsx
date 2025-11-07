@@ -4,6 +4,8 @@ import { useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/components/auth-context'
 
+export const dynamic = 'force-dynamic'
+
 function LoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
