@@ -1,16 +1,46 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { useRouter } from "next/navigation"
 import Cookies from "js-cookie"
-import { Check } from "lucide-react"
+import { Check, Lock } from "lucide-react"
 import ElectricBorder from '@/components/ElectricBorder.jsx'
 import { SharedNavbar } from "@/components/shared-navbar"
 import { FooterSection } from "@/components/footer-section"
 import { FAQSection } from "@/components/faq-section"
 import { useAuth } from "@/components/auth-context"
 import { getActivePlans, type ServicePlan } from "@/lib/api/website"
+
+async function fetchActiveSubscription() {
+  try {
+    console.log('[Pricing Page] Fetching active subscription...')
+    const response = await fetch('/api/subscription/active', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      cache: 'no-store'
+    })
+
+    console.log('[Pricing Page] Subscription API response status:', response.status)
+
+    if (!response.ok) {
+      console.log('[Pricing Page] Subscription API error:', response.status)
+      return null
+    }
+
+    const data = await response.json()
+    console.log('[Pricing Page] Subscription API response data:', data)
+    const subscription = data.data || null
+    console.log('[Pricing Page] Parsed subscription:', subscription)
+    return subscription
+  } catch (error) {
+    console.error('[Pricing Page] Error fetching subscription:', error)
+    return null
+  }
+}
 
 export default function PricingPage() {
   const router = useRouter()
@@ -19,6 +49,56 @@ export default function PricingPage() {
   const [hoveredCard, setHoveredCard] = useState<number | null>(null)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const { openRegisterModal } = useAuth()
+
+  // Fetch active subscription
+  const { data: activeSubscription } = useQuery({
+    queryKey: ['activeSubscription', 'pricing-page'],
+    queryFn: fetchActiveSubscription,
+    enabled: true,
+    refetchInterval: 60000,
+    retry: false,
+    staleTime: 0,
+  })
+
+  // Check if subscription is active and valid
+  const subscriptionState = useMemo(() => {
+    if (!activeSubscription) {
+      return {
+        hasActiveSubscription: false,
+        subscriptionEndDate: null,
+        isLifetime: false,
+        isExpired: false,
+      }
+    }
+
+    const endDate = activeSubscription.endDate ? new Date(activeSubscription.endDate) : null
+    const isLifetime = activeSubscription.endDate === null
+    const now = new Date()
+    const isExpired = endDate ? endDate <= now : false
+    
+    const hasActive = activeSubscription.status === 'ACTIVE' && (isLifetime || !isExpired)
+    
+    return {
+      hasActiveSubscription: hasActive,
+      subscriptionEndDate: endDate,
+      isLifetime,
+      isExpired,
+    }
+  }, [activeSubscription])
+
+  const { hasActiveSubscription, subscriptionEndDate, isLifetime } = subscriptionState
+
+  // Debug logging
+  useEffect(() => {
+    console.log('[Pricing Page] Subscription Check:', {
+      hasSubscriptionData: !!activeSubscription,
+      subscriptionData: activeSubscription,
+      status: activeSubscription?.status,
+      endDate: activeSubscription?.endDate,
+      hasActiveSubscription,
+      willDisableButtons: hasActiveSubscription
+    })
+  }, [activeSubscription, hasActiveSubscription])
 
   // Check if user is logged in
   useEffect(() => {
@@ -36,6 +116,17 @@ export default function PricingPage() {
 
   const handlePlanClick = (planId: string, e: React.MouseEvent) => {
     e.preventDefault()
+    
+    // Check if user has active subscription
+    if (hasActiveSubscription) {
+      if (isLifetime) {
+        alert('You have a lifetime plan active. No additional purchase needed.')
+      } else {
+        alert(`You have an active subscription until ${subscriptionEndDate?.toLocaleDateString()}. Please wait until it expires to purchase a new plan.`)
+      }
+      return
+    }
+    
     if (isLoggedIn) {
       // If logged in, go directly to checkout
       router.push(`/checkout?planId=${planId}`)
@@ -254,21 +345,70 @@ export default function PricingPage() {
                   </ul>
                 </div>
 
+                {/* Active Subscription Warning */}
+                {hasActiveSubscription && (
+                  <div className="mb-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                    <div className="flex items-start space-x-2">
+                      <Lock className="w-4 h-4 text-yellow-400 flex-shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-xs text-yellow-400 font-medium mb-1">
+                          Active Subscription
+                        </p>
+                        <p className="text-xs text-yellow-300/80">
+                          {isLifetime 
+                            ? 'Lifetime plan active. Cannot purchase additional plans.'
+                            : `Valid until ${subscriptionEndDate?.toLocaleDateString()}. Cannot purchase until expiry.`}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Subscribe Button */}
                 <button
-                  onClick={(e) => handlePlanClick(plan.id, e)}
-                  className="w-full py-3 rounded-lg font-medium transition-all duration-300 group-hover:scale-105 bg-orange-500 text-white flex items-center justify-center cursor-pointer" 
-                  style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}
+                  type="button"
+                  onClick={(e) => {
+                    if (hasActiveSubscription) {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      console.log('[Pricing Page] Button blocked - Active subscription:', hasActiveSubscription)
+                      return false
+                    }
+                    console.log('[Pricing Page] Button clicked:', { planId: plan.id, hasActiveSubscription })
+                    handlePlanClick(plan.id, e)
+                  }}
+                  disabled={hasActiveSubscription}
+                  aria-disabled={hasActiveSubscription}
+                  tabIndex={hasActiveSubscription ? -1 : 0}
+                  className={`w-full py-3 rounded-lg font-medium transition-all duration-300 ${
+                    hasActiveSubscription
+                      ? 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-60'
+                      : 'group-hover:scale-105 bg-orange-500 text-white cursor-pointer hover:bg-orange-600'
+                  } flex items-center justify-center`}
+                  style={{ 
+                    fontFamily: 'Orbitron, sans-serif', 
+                    fontWeight: '600',
+                    pointerEvents: hasActiveSubscription ? 'none' : 'auto'
+                  }}
                 >
-                  {plan.buttonText}
-                  <svg
-                    className="w-4 h-4 ml-2 transition-transform duration-300 group-hover:translate-x-1"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
+                  {hasActiveSubscription ? (
+                    <>
+                      <Lock className="w-4 h-4 mr-2" />
+                      {isLifetime ? 'Lifetime Plan Active' : 'Subscription Active'}
+                    </>
+                  ) : (
+                    <>
+                      {plan.buttonText}
+                      <svg
+                        className="w-4 h-4 ml-2 transition-transform duration-300 group-hover:translate-x-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </>
+                  )}
                 </button>
               </div>
             );
