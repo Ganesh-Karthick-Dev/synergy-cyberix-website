@@ -15,6 +15,44 @@ export default function PaymentSuccessPage() {
   const paymentId = searchParams.get('payment_id')
   const orderId = searchParams.get('order_id')
 
+  const downloadInvoice = async () => {
+    if (!paymentId) {
+      alert('Payment ID not found. Cannot download invoice.')
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/payments/invoice/${paymentId}`, {
+        method: 'GET',
+        credentials: 'include'
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        alert(`Failed to download invoice: ${errorData.error?.message || 'Unknown error'}`)
+        return
+      }
+
+      // Create a blob from the response
+      const blob = await response.blob()
+
+      // Create a download link
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `invoice-${paymentId.slice(-8)}.pdf`
+      document.body.appendChild(link)
+      link.click()
+
+      // Clean up
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('Error downloading invoice:', error)
+      alert('Failed to download invoice. Please try again.')
+    }
+  }
+
   useEffect(() => {
     const timer = setInterval(() => {
       setCountdown((prev) => {
@@ -150,6 +188,16 @@ export default function PaymentSuccessPage() {
               <Receipt className="w-4 h-4 mr-2" />
               View Subscription
               <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+
+            <Button
+              onClick={downloadInvoice}
+              variant="outline"
+              className="border-white/20 text-white hover:bg-white/10 px-8 py-3"
+              style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}
+            >
+              <Receipt className="w-4 h-4 mr-2" />
+              Download Invoice
             </Button>
 
             <Button

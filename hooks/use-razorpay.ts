@@ -128,7 +128,7 @@ export const useRazorpay = () => {
   /**
    * Verify payment
    */
-  const verifyPayment = async (razorpayResponse: RazorpayResponse): Promise<boolean> => {
+  const verifyPayment = async (razorpayResponse: RazorpayResponse): Promise<{ verified: boolean; paymentId?: string }> => {
     try {
       console.log('[Razorpay Hook] ===== VERIFYING PAYMENT =====')
       console.log('[Razorpay Hook] Order ID:', razorpayResponse.razorpay_order_id)
@@ -157,10 +157,15 @@ export const useRazorpay = () => {
       }
 
       const data = await response.json()
-      return data.success
+      console.log('[Razorpay Hook] ✅ Payment verified, payment record ID:', data.data?.paymentId)
+      return {
+        verified: data.success,
+        paymentId: data.data?.paymentId
+      }
     } catch (err: any) {
+      console.error('[Razorpay Hook] ❌ Payment verification failed:', err)
       setError(err.message)
-      return false
+      return { verified: false }
     }
   }
 
@@ -198,11 +203,11 @@ export const useRazorpay = () => {
         order_id: order.razorpayOrderId,
         handler: async (response: RazorpayResponse) => {
           // Verify payment
-          const verified = await verifyPayment(response)
+          const verificationResult = await verifyPayment(response)
 
-          if (verified) {
-            // Redirect to success page
-            router.push(`/payment/success?payment_id=${response.razorpay_payment_id}&order_id=${response.razorpay_order_id}`)
+          if (verificationResult.verified && verificationResult.paymentId) {
+            // Redirect to success page with internal payment record ID
+            router.push(`/payment/success?payment_id=${verificationResult.paymentId}&order_id=${response.razorpay_order_id}`)
           } else {
             // Redirect to failure page
             router.push(`/payment/failure?payment_id=${response.razorpay_payment_id}&order_id=${response.razorpay_order_id}&reason=verification_failed`)
