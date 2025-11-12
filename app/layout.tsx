@@ -11,6 +11,7 @@ import { LoginModal } from '@/components/login-modal'
 import { RegisterModal } from '@/components/register-modal'
 import { ScrollToTop } from '@/components/scroll-to-top'
 import { Chatbot } from '@/components/chatbot'
+import { AuthRedirectHandler } from '@/components/auth-redirect-handler'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -30,6 +31,7 @@ export default function RootLayout({
         <QueryProvider>
           <RegistrationProvider>
             <AuthProvider>
+              <AuthRedirectHandler />
               <AdBanner />
               {children}
               <ClientModalWrapper />

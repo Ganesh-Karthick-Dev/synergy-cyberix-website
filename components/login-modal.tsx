@@ -59,10 +59,22 @@ function LoginModalContent() {
       console.log('[Login] Success:', data)
       // Close modal
       closeLoginModal()
-      // Reload page to update auth state
-      setTimeout(() => {
-        window.location.reload()
-      }, 100)
+      
+      // Check if there's a selected planId in sessionStorage
+      const selectedPlanId = typeof window !== 'undefined' ? sessionStorage.getItem('selectedPlanId') : null
+      
+      if (selectedPlanId) {
+        // Clear the stored planId and redirect to checkout
+        sessionStorage.removeItem('selectedPlanId')
+        setTimeout(() => {
+          window.location.href = `/checkout?planId=${selectedPlanId}`
+        }, 100)
+      } else {
+        // Reload page to update auth state
+        setTimeout(() => {
+          window.location.reload()
+        }, 100)
+      }
     },
     onError: (error: any) => {
       console.error('[Login] Error:', error)

@@ -69,7 +69,7 @@ export function FAQSection({ className = "" }: FAQSectionProps) {
   return (
     <section 
       ref={sectionRef}
-      className={`relative min-h-screen py-20 px-4 ${className}`}
+      className={`relative py-8 px-4 ${className}`}
       style={{
         backgroundImage: "url('/hero/above footer.png')",
         backgroundSize: "cover",
@@ -80,13 +80,13 @@ export function FAQSection({ className = "" }: FAQSectionProps) {
 
       <div className="relative max-w-4xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-16 animate-on-scroll opacity-0 translate-y-8 transition-all duration-700">
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '700' }}>
+        <div className="text-center mb-8 animate-on-scroll opacity-0 translate-y-8 transition-all duration-700">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '700' }}>
             Frequently Asked
             <br />
             Questions
           </h2>
-          <p className="text-white/90 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}>
+          <p className="text-white/90 text-base md:text-lg max-w-2xl mx-auto leading-relaxed mb-6" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}>
             Got questions? We've got answers. Find everything you need to know about using our platform, plans, and
             features.
           </p>
