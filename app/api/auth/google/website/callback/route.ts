@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // Get the backend API URL from environment
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9000';
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4005';
     
     // Get all query parameters from the request
     const searchParams = request.nextUrl.searchParams;

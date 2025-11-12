@@ -3,18 +3,21 @@
 import { useState, useEffect } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { useQuery } from "@tanstack/react-query"
-import { Check, Lock, CreditCard, Shield, ArrowLeft, User, Mail, Phone, Building } from "lucide-react"
+import { Check, Lock, CreditCard, Shield, ArrowLeft, User, Mail, Phone, Building, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { SharedNavbar } from "@/components/shared-navbar"
 import { FooterSection } from "@/components/footer-section"
 import { getActivePlans, type ServicePlan } from "@/lib/api/website"
+import { useRazorpay } from "@/hooks/use-razorpay"
+import Cookies from "js-cookie"
 
 export default function CheckoutPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const planId = searchParams.get('planId')
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly")
-  
+  const { initiatePayment, isLoading: paymentLoading } = useRazorpay()
+
   // Fetch active service plans
   const { data: plansData = [], isLoading } = useQuery({
     queryKey: ['activePlans'],
@@ -24,23 +27,32 @@ export default function CheckoutPage() {
   // Find the selected plan
   const selectedPlan = plansData.find((plan: ServicePlan) => plan.id === planId)
 
-  // Form state
-  const [formData, setFormData] = useState({
+  // Get user details from cookies/localStorage
+  const [userDetails, setUserDetails] = useState({
     firstName: "",
     lastName: "",
     email: "",
     phone: "",
-    company: "",
-    address: "",
-    city: "",
-    state: "",
-    zipCode: "",
-    country: "",
-    cardNumber: "",
-    cardName: "",
-    expiryDate: "",
-    cvv: "",
   })
+
+  // Load user details on component mount
+  useEffect(() => {
+    const loadUserDetails = () => {
+      const firstName = localStorage.getItem('userFirstName') || ''
+      const lastName = localStorage.getItem('userLastName') || ''
+      const email = localStorage.getItem('userEmail') || Cookies.get('userEmail') || ''
+      const phone = localStorage.getItem('userPhone') || ''
+
+      setUserDetails({
+        firstName,
+        lastName,
+        email,
+        phone,
+      })
+    }
+
+    loadUserDetails()
+  }, [])
 
   // Calculate price
   const yearlyPrice = selectedPlan ? Math.round(selectedPlan.price * 12 * 0.9) : 0
@@ -55,41 +67,19 @@ export default function CheckoutPage() {
     }
   }, [isLoading, selectedPlan, planId, router])
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-  }
-
-  const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\s/g, '')
-    if (value.length <= 16) {
-      value = value.match(/.{1,4}/g)?.join(' ') || value
-      setFormData(prev => ({ ...prev, cardNumber: value }))
+  const handlePayment = async () => {
+    if (!planId || !selectedPlan) {
+      return
     }
-  }
 
-  const handleExpiryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, '')
-    if (value.length <= 4) {
-      if (value.length >= 2) {
-        value = value.slice(0, 2) + '/' + value.slice(2)
-      }
-      setFormData(prev => ({ ...prev, expiryDate: value }))
-    }
-  }
+    // Prepare user details for Razorpay
+    const fullName = `${userDetails.firstName} ${userDetails.lastName}`.trim()
 
-  const handleCvvChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, '')
-    if (value.length <= 3) {
-      setFormData(prev => ({ ...prev, cvv: value }))
-    }
-  }
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Handle payment processing here
-    console.log('Processing payment...', { planId, billingCycle, formData, finalPrice })
-    // TODO: Integrate with payment gateway
+    await initiatePayment(planId, {
+      name: fullName || undefined,
+      email: userDetails.email || undefined,
+      contact: userDetails.phone || undefined,
+    })
   }
 
   if (isLoading) {
@@ -191,267 +181,134 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
+              {/* User Information Display */}
+              <div className="space-y-6">
                 {/* Personal Information */}
                 <div className="space-y-4">
                   <h2 className="text-xl font-semibold text-white flex items-center gap-2" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}>
                     <User className="w-5 h-5 text-orange-500" />
-                    Personal Information
+                    Account Information
                   </h2>
-                  
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-white/80 text-sm mb-2" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '500' }}>
-                        First Name *
-                      </label>
-                      <input
-                        type="text"
-                        name="firstName"
-                        value={formData.firstName}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-                        placeholder="John"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-white/80 text-sm mb-2" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '500' }}>
-                        Last Name *
-                      </label>
-                      <input
-                        type="text"
-                        name="lastName"
-                        value={formData.lastName}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-                        placeholder="Doe"
-                      />
-                    </div>
-                  </div>
 
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-white/80 text-sm mb-2 flex items-center gap-2" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '500' }}>
-                        <Mail className="w-4 h-4 text-orange-500" />
-                        Email Address *
-                      </label>
-                      <input
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-                        placeholder="john.doe@example.com"
-                      />
+                  <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-white/60 text-sm mb-1" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}>
+                          Name
+                        </label>
+                        <p className="text-white font-medium" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '500' }}>
+                          {userDetails.firstName || userDetails.lastName
+                            ? `${userDetails.firstName} ${userDetails.lastName}`.trim()
+                            : 'Not provided'
+                          }
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-white/60 text-sm mb-1" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}>
+                          Email
+                        </label>
+                        <p className="text-white font-medium" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '500' }}>
+                          {userDetails.email || 'Not provided'}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-white/80 text-sm mb-2 flex items-center gap-2" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '500' }}>
-                        <Phone className="w-4 h-4 text-orange-500" />
-                        Phone Number *
-                      </label>
-                      <input
-                        type="tel"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-                        placeholder="+1 (555) 000-0000"
-                      />
-                    </div>
-                  </div>
 
-                  <div>
-                    <label className="block text-white/80 text-sm mb-2 flex items-center gap-2" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '500' }}>
-                      <Building className="w-4 h-4 text-orange-500" />
-                      Company Name
-                    </label>
-                    <input
-                      type="text"
-                      name="company"
-                      value={formData.company}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-                      placeholder="Acme Inc."
-                    />
+                    {userDetails.phone && (
+                      <div className="mt-4">
+                        <label className="block text-white/60 text-sm mb-1" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}>
+                          Phone
+                        </label>
+                        <p className="text-white font-medium" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '500' }}>
+                          {userDetails.phone}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                {/* Billing Address */}
-                <div className="space-y-4 pt-6 border-t border-white/10">
-                  <h2 className="text-xl font-semibold text-white flex items-center gap-2" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}>
-                    <Shield className="w-5 h-5 text-orange-500" />
-                    Billing Address
-                  </h2>
-                  
-                  <div>
-                    <label className="block text-white/80 text-sm mb-2" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '500' }}>
-                      Street Address *
-                    </label>
-                    <input
-                      type="text"
-                      name="address"
-                      value={formData.address}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-                      placeholder="123 Main Street"
-                    />
-                  </div>
-
-                  <div className="grid md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-white/80 text-sm mb-2" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '500' }}>
-                        City *
-                      </label>
-                      <input
-                        type="text"
-                        name="city"
-                        value={formData.city}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-                        placeholder="New York"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-white/80 text-sm mb-2" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '500' }}>
-                        State *
-                      </label>
-                      <input
-                        type="text"
-                        name="state"
-                        value={formData.state}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-                        placeholder="NY"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-white/80 text-sm mb-2" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '500' }}>
-                        ZIP Code *
-                      </label>
-                      <input
-                        type="text"
-                        name="zipCode"
-                        value={formData.zipCode}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-                        placeholder="10001"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-white/80 text-sm mb-2" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '500' }}>
-                      Country *
-                    </label>
-                    <input
-                      type="text"
-                      name="country"
-                      value={formData.country}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-                      placeholder="United States"
-                    />
-                  </div>
-                </div>
-
-                {/* Payment Information */}
+                {/* Payment Method */}
                 <div className="space-y-4 pt-6 border-t border-white/10">
                   <h2 className="text-xl font-semibold text-white flex items-center gap-2" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}>
                     <CreditCard className="w-5 h-5 text-orange-500" />
-                    Payment Information
+                    Payment Method
                   </h2>
-                  
-                  <div>
-                    <label className="block text-white/80 text-sm mb-2" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '500' }}>
-                      Card Number *
-                    </label>
-                    <input
-                      type="text"
-                      name="cardNumber"
-                      value={formData.cardNumber}
-                      onChange={handleCardNumberChange}
-                      required
-                      maxLength={19}
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-                      placeholder="1234 5678 9012 3456"
-                    />
-                  </div>
 
-                  <div>
-                    <label className="block text-white/80 text-sm mb-2" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '500' }}>
-                      Cardholder Name *
-                    </label>
-                    <input
-                      type="text"
-                      name="cardName"
-                      value={formData.cardName}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-                      placeholder="JOHN DOE"
-                    />
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-white/80 text-sm mb-2" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '500' }}>
-                        Expiry Date *
-                      </label>
-                      <input
-                        type="text"
-                        name="expiryDate"
-                        value={formData.expiryDate}
-                        onChange={handleExpiryChange}
-                        required
-                        maxLength={5}
-                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-                        placeholder="MM/YY"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-white/80 text-sm mb-2" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '500' }}>
-                        CVV *
-                      </label>
-                      <input
-                        type="text"
-                        name="cvv"
-                        value={formData.cvv}
-                        onChange={handleCvvChange}
-                        required
-                        maxLength={3}
-                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-                        placeholder="123"
-                      />
+                  <div className="bg-white/5 rounded-lg p-6 border border-white/10">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center">
+                          <CreditCard className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="text-white font-semibold" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}>
+                            Razorpay Secure Checkout
+                          </h3>
+                          <p className="text-white/70 text-sm" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}>
+                            Pay securely with UPI, Cards, Net Banking & Wallets
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-orange-500">
+                        <Shield className="w-8 h-8" />
+                      </div>
                     </div>
                   </div>
 
-                  {/* Security Badge */}
-                  <div className="flex items-center gap-2 p-4 bg-white/5 rounded-lg border border-white/10">
-                    <Lock className="w-5 h-5 text-orange-500" />
-                    <span className="text-white/70 text-sm" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}>
-                      Your payment information is encrypted and secure
-                    </span>
+                  {/* Security Features */}
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div className="flex items-center gap-2 p-3 bg-white/5 rounded-lg border border-white/10">
+                      <Lock className="w-4 h-4 text-orange-500" />
+                      <span className="text-white/70 text-sm" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}>
+                        SSL Encrypted
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 p-3 bg-white/5 rounded-lg border border-white/10">
+                      <Shield className="w-4 h-4 text-orange-500" />
+                      <span className="text-white/70 text-sm" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}>
+                        PCI Compliant
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 p-3 bg-white/5 rounded-lg border border-white/10">
+                      <Check className="w-4 h-4 text-orange-500" />
+                      <span className="text-white/70 text-sm" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}>
+                        Money Back Guarantee
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Submit Button */}
+                {/* Payment Button */}
                 <Button
-                  type="submit"
-                  className="w-full py-6 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-lg font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                  onClick={handlePayment}
+                  disabled={paymentLoading}
+                  className="w-full py-6 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-lg font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '700' }}
                 >
-                  <Lock className="w-5 h-5 mr-2" />
-                  Complete Secure Payment
+                  {paymentLoading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      Processing Payment...
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="w-5 h-5 mr-2" />
+                      Pay with Razorpay
+                    </>
+                  )}
                 </Button>
-              </form>
+
+                {/* Terms and Conditions */}
+                <div className="text-center text-white/60 text-sm" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}>
+                  By completing your purchase, you agree to our{' '}
+                  <a href="/terms" className="text-orange-500 hover:text-orange-400 underline">
+                    Terms of Service
+                  </a>{' '}
+                  and{' '}
+                  <a href="/privacy" className="text-orange-500 hover:text-orange-400 underline">
+                    Privacy Policy
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
 

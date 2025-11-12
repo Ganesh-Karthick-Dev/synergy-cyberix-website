@@ -4,7 +4,7 @@
  */
 
 export const API_CONFIG = {
-  BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9000',
+  BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4005',
   ENDPOINTS: {
     AUTH: {
       LOGIN: '/api/auth/login',
