@@ -111,7 +111,7 @@ export function SharedNavbar() {
           </Link>
           
           <Link 
-            href="/#warning" 
+            href="/contact" 
             className="relative text-white hover:text-orange-400 transition-all duration-300 text-lg font-semibold group overflow-hidden px-2 py-1"
             style={{ 
               fontFamily: 'Orbitron, sans-serif', 
@@ -237,7 +237,7 @@ export function SharedNavbar() {
             </Link>
             <Link 
               onClick={() => setMobileNavOpen(false)} 
-              href="/#warning" 
+              href="/contact" 
               className="relative block text-white hover:text-orange-400 transition-all duration-300 text-base font-semibold py-2 border-b border-white/10 hover:border-orange-500/50 overflow-hidden group"
               style={{ 
                 fontFamily: 'Orbitron, sans-serif', 

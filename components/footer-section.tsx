@@ -4,6 +4,7 @@ import { Facebook, Instagram, Twitter, Youtube, Mail, Phone, MapPin } from "luci
 import { memo, useEffect, useRef } from "react"
 import { gsap } from "gsap"
 import Image from "next/image"
+import Link from "next/link"
 
 const FooterSection = memo(() => {
   const cyberixTextRef = useRef<HTMLDivElement>(null)
@@ -86,44 +87,34 @@ const FooterSection = memo(() => {
             </div>
             <ul className="space-y-3">
               <li>
-                <a 
-                  href="#about-us" 
+                <Link 
+                  href="/#about-us" 
                   className="text-gray-300 hover:text-orange-400 transition-all duration-300 text-sm flex items-center group"
                   style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}
                 >
                   <span className="w-0 group-hover:w-2 h-0.5 bg-orange-500 mr-0 group-hover:mr-2 transition-all duration-300"></span>
                   About
-                </a>
+                </Link>
               </li>
               <li>
-                <a 
-                  href="#why-choose" 
+                <Link 
+                  href="/#why-choose" 
                   className="text-gray-300 hover:text-orange-400 transition-all duration-300 text-sm flex items-center group"
                   style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}
                 >
                   <span className="w-0 group-hover:w-2 h-0.5 bg-orange-500 mr-0 group-hover:mr-2 transition-all duration-300"></span>
                   Services
-                </a>
+                </Link>
               </li>
               <li>
-                <a 
-                  href="#team" 
-                  className="text-gray-300 hover:text-orange-400 transition-all duration-300 text-sm flex items-center group"
-                  style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}
-                >
-                  <span className="w-0 group-hover:w-2 h-0.5 bg-orange-500 mr-0 group-hover:mr-2 transition-all duration-300"></span>
-                  Team
-                </a>
-              </li>
-              <li>
-                <a 
-                  href="#pricing" 
+                <Link 
+                  href="/#pricing" 
                   className="text-gray-300 hover:text-orange-400 transition-all duration-300 text-sm flex items-center group"
                   style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}
                 >
                   <span className="w-0 group-hover:w-2 h-0.5 bg-orange-500 mr-0 group-hover:mr-2 transition-all duration-300"></span>
                   Prices
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -138,44 +129,44 @@ const FooterSection = memo(() => {
             </div>
             <ul className="space-y-3">
               <li>
-                <a 
-                  href="#support" 
+                <Link 
+                  href="/support" 
                   className="text-gray-300 hover:text-orange-400 transition-all duration-300 text-sm flex items-center group"
                   style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}
                 >
                   <span className="w-0 group-hover:w-2 h-0.5 bg-orange-500 mr-0 group-hover:mr-2 transition-all duration-300"></span>
                   Customer Support
-                </a>
+                </Link>
               </li>
               <li>
-                <a 
-                  href="#terms" 
+                <Link 
+                  href="/terms" 
                   className="text-gray-300 hover:text-orange-400 transition-all duration-300 text-sm flex items-center group"
                   style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}
                 >
                   <span className="w-0 group-hover:w-2 h-0.5 bg-orange-500 mr-0 group-hover:mr-2 transition-all duration-300"></span>
                   Terms & Conditions
-                </a>
+                </Link>
               </li>
               <li>
-                <a 
-                  href="#privacy" 
+                <Link 
+                  href="/privacy" 
                   className="text-gray-300 hover:text-orange-400 transition-all duration-300 text-sm flex items-center group"
                   style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}
                 >
                   <span className="w-0 group-hover:w-2 h-0.5 bg-orange-500 mr-0 group-hover:mr-2 transition-all duration-300"></span>
                   Privacy Policy
-                </a>
+                </Link>
               </li>
               <li>
-                <a 
-                  href="#warning" 
+                <Link 
+                  href="/contact" 
                   className="text-gray-300 hover:text-orange-400 transition-all duration-300 text-sm flex items-center group"
                   style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}
                 >
                   <span className="w-0 group-hover:w-2 h-0.5 bg-orange-500 mr-0 group-hover:mr-2 transition-all duration-300"></span>
                   Contact Us
-                </a>
+                </Link>
               </li>
             </ul>
           </div>

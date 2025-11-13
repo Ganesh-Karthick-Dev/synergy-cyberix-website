@@ -31,7 +31,9 @@ export default function Home() {
       <div id="why-choose">
         <WhyChooseUsSection />
       </div>
-      <PricingSection />
+      <div id="pricing">
+        <PricingSection />
+      </div>
       <UseCasesSection />
       <div id="warning">
         <WarningSection />

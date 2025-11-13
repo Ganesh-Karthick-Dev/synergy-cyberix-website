@@ -113,42 +113,50 @@ export default function PricingPage() {
 
   if (isLoading) {
     return (
-      <section 
-        ref={sectionRef}
-        className="min-h-screen py-20 px-4 flex items-center justify-center"
-        style={{
-          backgroundImage: "url('/hero/middle-1.png')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat"
-        }}
-      >
-        <div className="text-white text-xl">Loading plans...</div>
-      </section>
+      <div className="min-h-screen flex flex-col">
+        <SharedNavbar />
+        <section 
+          ref={sectionRef}
+          className="flex-1 pt-24 pb-16 px-4 flex items-center justify-center"
+          style={{
+            backgroundImage: "url('/hero/middle-1.png')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat"
+          }}
+        >
+          <div className="text-white text-xl">Loading plans...</div>
+        </section>
+        <FooterSection />
+      </div>
     )
   }
 
   if (plans.length === 0) {
     return (
-      <section 
-        ref={sectionRef}
-        className="min-h-screen py-20 px-4"
-        style={{
-          backgroundImage: "url('/hero/middle-1.png')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat"
-        }}
-      >
-        <div className="max-w-7xl mx-auto text-center">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '700' }}>
-            Choose the Plan
-            <br />
-            That's Right for You
-          </h2>
-          <p className="text-white/90 text-lg">No plans available at the moment.</p>
-        </div>
-      </section>
+      <div className="min-h-screen flex flex-col">
+        <SharedNavbar />
+        <section 
+          ref={sectionRef}
+          className="flex-1 pt-24 pb-16 px-4"
+          style={{
+            backgroundImage: "url('/hero/middle-1.png')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat"
+          }}
+        >
+          <div className="max-w-7xl mx-auto text-center">
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '700' }}>
+              Choose the Plan
+              <br />
+              That's Right for You
+            </h2>
+            <p className="text-white/90 text-lg">No plans available at the moment.</p>
+          </div>
+        </section>
+        <FooterSection />
+      </div>
     )
   }
 
@@ -157,7 +165,7 @@ export default function PricingPage() {
       <SharedNavbar />
       <section 
         ref={sectionRef}
-        className="flex-1 pt-4 pb-8 px-4"
+        className="flex-1 pt-24 pb-8 px-4"
         style={{
           backgroundImage: "url('/hero/middle-1.png')",
           backgroundSize: "cover",

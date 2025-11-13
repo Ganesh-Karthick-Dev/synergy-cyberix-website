@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { User, Edit2, CreditCard, Bell, HelpCircle, LogOut } from "lucide-react"
+import { SharedNavbar } from "@/components/shared-navbar"
 import Cookies from 'js-cookie'
 import apiClient from '@/lib/api/client'
 import { logoutUser } from '@/lib/api'
@@ -218,15 +219,19 @@ export default function ProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-        <div className="text-white text-xl">Loading...</div>
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#0a0a0a] via-[#0f0f0f] to-[#0a0a0a]">
+        <SharedNavbar />
+        <div className="flex-1 flex items-center justify-center pt-24">
+          <div className="text-white text-xl">Loading...</div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#0f0f0f] to-[#0a0a0a] text-white">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12 max-w-7xl">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#0a0a0a] via-[#0f0f0f] to-[#0a0a0a] text-white">
+      <SharedNavbar />
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12 max-w-7xl pt-24">
         {/* Header */}
         <div className="mb-8 lg:mb-12">
           <div className="flex items-center gap-4 mb-6">
