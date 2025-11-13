@@ -16,6 +16,7 @@ interface Subscription {
     price: number
     description: string
     features: any
+    billingCycle?: string
   }
   status: string
   startDate: string
@@ -63,6 +64,16 @@ function formatPlanName(name: string) {
     'PRO_PLUS': 'Pro Plus'
   }
   return planMap[name] || name
+}
+
+function formatBillingCycle(cycle: string | undefined) {
+  if (!cycle) return null
+  const cycleMap: Record<string, string> = {
+    'MONTHLY': 'Monthly',
+    'YEARLY': 'Yearly',
+    'LIFETIME': 'Lifetime'
+  }
+  return cycleMap[cycle] || cycle
 }
 
 function getDaysRemaining(endDate: string | null) {
@@ -144,6 +155,14 @@ export function SubscriptionTab() {
 
               {/* Validity Information */}
               <div className="space-y-3 mb-4">
+                {subscription.plan.billingCycle && (
+                  <div className="flex items-center space-x-2 text-gray-300">
+                    <Calendar className="w-4 h-4 text-gray-400" />
+                    <span className="text-sm">
+                      <strong>Billing Cycle:</strong> {formatBillingCycle(subscription.plan.billingCycle)}
+                    </span>
+                  </div>
+                )}
                 <div className="flex items-center space-x-2 text-gray-300">
                   <Calendar className="w-4 h-4 text-gray-400" />
                   <span className="text-sm">
