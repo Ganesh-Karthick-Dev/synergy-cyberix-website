@@ -11,6 +11,7 @@ import { getActivePlans, type ServicePlan } from "@/lib/api/website"
 import { useRazorpay } from "@/hooks/use-razorpay"
 import Cookies from "js-cookie"
 
+
 export default function CheckoutPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
