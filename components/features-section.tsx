@@ -60,22 +60,22 @@ export function FeaturesSection() {
     },
     {
       id: 2,
-      title: "API Security Scanner",
-      icon: Plug,
-      description: "Secure your API infrastructure with complete endpoint discovery, authentication testing, shadow API detection, and business logic vulnerability assessment.",
-      businessImpact: "Protect sensitive data, prevent financial losses, ensure compliance",
+      title: "Overview Scan",
+      icon: Search,
+      description: "Performs 17+ intelligent scans to safeguard your entire website ecosystem.",
+      businessImpact: "Comprehensive security assessment across all attack vectors",
       features: [
-        "Complete API endpoint discovery and inventory mapping",
-        "Authentication and authorization vulnerability testing",
-        "Shadow API detection for undocumented endpoints",
-        "Business logic vulnerability assessment (IDOR, privilege escalation)",
-        "Data sensitivity analysis and privacy compliance checking"
+        "17+ intelligent security scans in a single assessment",
+        "Complete website ecosystem coverage",
+        "Automated vulnerability detection and analysis",
+        "Real-time threat identification",
+        "Comprehensive security reporting"
       ],
       useCases: [
-        "Secure REST and GraphQL APIs",
-        "Find hidden API endpoints",
-        "Test authentication mechanisms",
-        "Ensure data privacy compliance"
+        "Initial security assessment of your website",
+        "Regular security audits and monitoring",
+        "Comprehensive vulnerability scanning",
+        "Complete website security coverage"
       ]
     },
     {
@@ -251,21 +251,21 @@ export function FeaturesSection() {
               </button>
             </div>
 
-            {/* Module 2: API Security Scanner */}
+            {/* Module 2: Overview Scan */}
             <div className="group relative bg-gradient-to-br from-gray-900/50 to-gray-800/30 backdrop-blur-sm rounded-2xl p-6 border border-orange-500/30 hover:border-orange-400/60 transition-all duration-300 hover:scale-105 shadow-xl shadow-orange-500/20 animate-on-scroll opacity-0 translate-y-8 transition-all duration-700" style={{ transitionDelay: '200ms' }}>
               <div className="flex items-center justify-between mb-4">
                 <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                  <Plug className="text-orange-400 w-5 h-5" />
+                  <Search className="text-orange-400 w-5 h-5" />
                 </div>
                 <div className="text-orange-400 text-xs font-medium px-2 py-1 bg-orange-500/10 rounded-full" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '500' }}>
                   Module 2
                 </div>
               </div>
               <h3 className="text-white text-lg font-semibold mb-3 leading-tight" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}>
-                API Security Scanner
+                Overview Scan
               </h3>
               <p className="text-gray-300 text-sm mb-4 leading-relaxed" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}>
-                Secure your API infrastructure with comprehensive endpoint discovery
+                Performs 17+ intelligent scans to safeguard your entire website ecosystem
               </p>
               <button 
                 onClick={() => setSelectedModule(modules[1])}

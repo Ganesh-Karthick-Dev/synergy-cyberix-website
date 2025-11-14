@@ -1,11 +1,81 @@
 "use client"
 import { useState, useEffect, useRef } from 'react'
 import { useRegistration } from "@/components/registration-context"
+import { useRouter } from "next/navigation"
+import Cookies from "js-cookie"
+import { useAuth } from "@/components/auth-context"
+import { useQuery } from "@tanstack/react-query"
+
+async function fetchActiveSubscription() {
+  try {
+    const response = await fetch('/api/subscription/active', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      cache: 'no-store'
+    })
+
+    if (!response.ok) {
+      return null
+    }
+
+    const data = await response.json()
+    return data.data || null
+  } catch (error) {
+    return null
+  }
+}
 
 export function FreeTrialSection() {
+  const router = useRouter()
+  const { openLoginModal } = useAuth()
   const [isHovered, setIsHovered] = useState(false)
-  const { openModal } = useRegistration()
   const sectionRef = useRef<HTMLElement>(null)
+  const isLoggedIn = Cookies.get('isAuthenticated') === 'true' || !!Cookies.get('accessToken')
+
+  // Fetch active subscription
+  const { data: activeSubscription } = useQuery({
+    queryKey: ['activeSubscription', 'free-trial-section'],
+    queryFn: fetchActiveSubscription,
+    enabled: isLoggedIn,
+    refetchInterval: 60000,
+    retry: false,
+    staleTime: 0,
+  })
+
+  // Handle CTA button click
+  const handleCTAClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    const isAuth = Cookies.get('isAuthenticated') === 'true'
+    const token = Cookies.get('accessToken')
+    const loggedIn = isAuth || !!token
+
+    if (!loggedIn) {
+      // Not logged in - show login modal
+      openLoginModal()
+      return
+    }
+
+    // Check if user has active subscription
+    if (activeSubscription) {
+      const endDate = activeSubscription.endDate ? new Date(activeSubscription.endDate) : null
+      const isLifetime = activeSubscription.endDate === null
+      const now = new Date()
+      const isExpired = endDate ? endDate <= now : false
+      const hasActive = activeSubscription.status === 'ACTIVE' && (isLifetime || !isExpired)
+      
+      if (hasActive) {
+        // Has active subscription - redirect to download
+        router.push('/download')
+        return
+      }
+    }
+
+    // Logged in but no active subscription - show login
+    openLoginModal()
+  }
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -51,8 +121,8 @@ export function FreeTrialSection() {
 
           {/* CTA Button */}
           <div className="relative inline-block animate-on-scroll opacity-0 translate-y-8 transition-all duration-700" style={{ transitionDelay: '400ms' }}>
-            <a
-              href="/register"
+            <button
+              onClick={handleCTAClick}
               className={`
                 relative inline-block px-12 py-6 text-xl font-bold text-white rounded-2xl
                 transition-all duration-500 transform
@@ -77,14 +147,11 @@ export function FreeTrialSection() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 Start Free Network Scan Trial
-                <svg className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
               </span>
 
               {/* Animated Border */}
               <div className="absolute inset-0 rounded-2xl border-2 border-orange-300/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-            </a>
+            </button>
           </div>
 
           

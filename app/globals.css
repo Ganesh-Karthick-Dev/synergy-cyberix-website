@@ -129,6 +129,11 @@
     font-family: 'Orbitron', sans-serif;
     overflow-x: hidden;
   }
+  /* All buttons should show pointer cursor on hover */
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
   /* Hide scrollbar for Chrome, Safari and Opera */
   body::-webkit-scrollbar {
     display: none;

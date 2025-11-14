@@ -4,9 +4,7 @@ import { UserCard } from "./user-card"
 import { AboutSection } from "./about-section"
 import { AddressSection } from "./address-section"
 import { EmployeeDetailsSection } from "./employee-details-section"
-import { JobInformationCard } from "./job-information-card"
 import { ActivityCard } from "./activity-card"
-import { CompensationCard } from "./compensation-card"
 
 interface UserInfo {
   email?: string
@@ -14,12 +12,8 @@ interface UserInfo {
   firstName?: string
   lastName?: string
   phone?: string
-  address?: string
-  city?: string
-  postcode?: string
-  dateOfBirth?: string
-  nationalId?: string
-  title?: string
+  companyName?: string
+  location?: string
   hireDate?: string
 }
 
@@ -45,23 +39,17 @@ export function ProfileTab({ userInfo }: ProfileTabProps) {
           email={userInfo?.email}
         />
         <AddressSection 
-          address={userInfo?.address}
-          city={userInfo?.city}
-          postcode={userInfo?.postcode}
+          companyName={userInfo?.companyName}
+          location={userInfo?.location}
         />
         <EmployeeDetailsSection 
-          dateOfBirth={userInfo?.dateOfBirth}
-          nationalId={userInfo?.nationalId}
-          title={userInfo?.title}
           hireDate={userInfo?.hireDate}
         />
       </div>
 
-      {/* Right Column - Job Information & Activity */}
+      {/* Right Column - Activity */}
       <div className="lg:col-span-2 space-y-6">
-        <JobInformationCard />
         <ActivityCard />
-        <CompensationCard />
       </div>
     </div>
   )

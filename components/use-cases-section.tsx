@@ -1,8 +1,78 @@
 "use client"
 
 import { Monitor, Search, Building, Code } from "lucide-react"
+import { useRouter } from "next/navigation"
+import Cookies from "js-cookie"
+import { useAuth } from "@/components/auth-context"
+import { useQuery } from "@tanstack/react-query"
+
+async function fetchActiveSubscription() {
+  try {
+    const response = await fetch('/api/subscription/active', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      cache: 'no-store'
+    })
+
+    if (!response.ok) {
+      return null
+    }
+
+    const data = await response.json()
+    return data.data || null
+  } catch (error) {
+    return null
+  }
+}
 
 export function UseCasesSection() {
+  const router = useRouter()
+  const { openLoginModal } = useAuth()
+  const isLoggedIn = Cookies.get('isAuthenticated') === 'true' || !!Cookies.get('accessToken')
+
+  // Fetch active subscription
+  const { data: activeSubscription } = useQuery({
+    queryKey: ['activeSubscription', 'use-cases-section'],
+    queryFn: fetchActiveSubscription,
+    enabled: isLoggedIn,
+    refetchInterval: 60000,
+    retry: false,
+    staleTime: 0,
+  })
+
+  // Handle CTA button click
+  const handleCTAClick = () => {
+    const isAuth = Cookies.get('isAuthenticated') === 'true'
+    const token = Cookies.get('accessToken')
+    const loggedIn = isAuth || !!token
+
+    if (!loggedIn) {
+      // Not logged in - show login modal
+      openLoginModal()
+      return
+    }
+
+    // Check if user has active subscription
+    if (activeSubscription) {
+      const endDate = activeSubscription.endDate ? new Date(activeSubscription.endDate) : null
+      const isLifetime = activeSubscription.endDate === null
+      const now = new Date()
+      const isExpired = endDate ? endDate <= now : false
+      const hasActive = activeSubscription.status === 'ACTIVE' && (isLifetime || !isExpired)
+      
+      if (hasActive) {
+        // Has active subscription - redirect to download
+        router.push('/download')
+        return
+      }
+    }
+
+    // Logged in but no active subscription - show login
+    openLoginModal()
+  }
   return (
     <section 
       className="py-20 px-6"
@@ -152,9 +222,9 @@ export function UseCasesSection() {
               Join thousands of security professionals who trust CyberIx to protect their organizations. Get started with a free security assessment and discover your vulnerabilities before attackers do.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a href="/register" className="inline-block bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl cursor-pointer" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}>
+              <button onClick={handleCTAClick} className="inline-block bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl cursor-pointer" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}>
                 Start Free Security Scan
-              </a>
+              </button>
             </div>
           </div>
         </div>

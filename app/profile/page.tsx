@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { User, Edit2, CreditCard, Bell, HelpCircle, LogOut } from "lucide-react"
@@ -23,12 +23,8 @@ interface UserInfo {
   firstName?: string
   lastName?: string
   phone?: string
-  address?: string
-  city?: string
-  postcode?: string
-  dateOfBirth?: string
-  nationalId?: string
-  title?: string
+  companyName?: string
+  location?: string
   hireDate?: string
 }
 
@@ -37,19 +33,24 @@ interface EditProfileForm {
   lastName: string
   email: string
   phone: string
-  address: string
-  city: string
-  postcode: string
-  dateOfBirth: string
-  nationalId: string
-  title: string
+  companyName: string
+  location: string
 }
 
 export default function ProfilePage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('profile')
+
+  // Check for tab query parameter on mount
+  useEffect(() => {
+    const tab = searchParams.get('tab')
+    if (tab && ['profile', 'edit-profile', 'subscription', 'notifications', 'support'].includes(tab)) {
+      setActiveTab(tab)
+    }
+  }, [searchParams])
   const [logoutProgress, setLogoutProgress] = useState(0)
   const [isHoldingLogout, setIsHoldingLogout] = useState(false)
   const [showTooltip, setShowTooltip] = useState(false)
@@ -61,103 +62,90 @@ export default function ProfilePage() {
     lastName: '',
     email: '',
     phone: '',
-    address: '',
-    city: '',
-    postcode: '',
-    dateOfBirth: '',
-    nationalId: '',
-    title: ''
+    companyName: '',
+    location: ''
   })
 
-  // Fetch user data
-  useEffect(() => {
-    const fetchUserData = async () => {
+  // Fetch user data function
+  const fetchUserData = async () => {
+    try {
+      setIsLoading(true)
+      const email = Cookies.get('userEmail')
+      const name = Cookies.get('userName')
+      
       try {
-        setIsLoading(true)
-        const email = Cookies.get('userEmail')
-        const name = Cookies.get('userName')
-        
-        try {
-          const response = await apiClient.get('/api/users/me')
-          const userData = response.data?.data?.user || response.data?.data
-          if (userData) {
-            setUserInfo({
-              email: userData.email || email,
-              name: userData.firstName && userData.lastName 
-                ? `${userData.firstName} ${userData.lastName}` 
-                : name,
-              firstName: userData.firstName,
-              lastName: userData.lastName,
-              phone: userData.phone,
-              address: userData.address,
-              city: userData.city,
-              postcode: userData.postcode,
-              dateOfBirth: userData.dateOfBirth,
-              nationalId: userData.nationalId,
-              title: userData.title,
-              hireDate: userData.hireDate
-            })
-            setEditForm({
-              firstName: userData.firstName || '',
-              lastName: userData.lastName || '',
-              email: userData.email || email || '',
-              phone: userData.phone || '',
-              address: userData.address || '',
-              city: userData.city || '',
-              postcode: userData.postcode || '',
-              dateOfBirth: userData.dateOfBirth || '',
-              nationalId: userData.nationalId || '',
-              title: userData.title || ''
-            })
-          } else {
-            setUserInfo({
-              email: email,
-              name: name
-            })
-            setEditForm({
-              firstName: name?.split(' ')[0] || '',
-              lastName: name?.split(' ').slice(1).join(' ') || '',
-              email: email || '',
-              phone: '',
-              address: '',
-              city: '',
-              postcode: '',
-              dateOfBirth: '',
-              nationalId: '',
-              title: ''
-            })
-          }
-        } catch (error) {
-          console.error('[Profile] Error fetching user data:', error)
+        const response = await apiClient.get('/api/auth/profile')
+        const userData = response.data?.data
+        if (userData) {
+          const fullName = userData.firstName && userData.lastName 
+            ? `${userData.firstName} ${userData.lastName}` 
+            : userData.firstName || userData.lastName || name || userData.email?.split('@')[0] || 'User'
+          
+          setUserInfo({
+            email: userData.email || email,
+            name: fullName,
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            phone: userData.phone,
+            companyName: userData.companyName,
+            location: userData.location,
+            hireDate: userData.hireDate
+          })
+          setEditForm({
+            firstName: userData.firstName || '',
+            lastName: userData.lastName || '',
+            email: userData.email || email || '',
+            phone: userData.phone || '',
+            companyName: userData.companyName || '',
+            location: userData.location || ''
+          })
+        } else {
           setUserInfo({
             email: email,
-            name: name
+            name: name || 'User'
           })
           setEditForm({
             firstName: name?.split(' ')[0] || '',
             lastName: name?.split(' ').slice(1).join(' ') || '',
             email: email || '',
             phone: '',
-            address: '',
-            city: '',
-            postcode: '',
-            dateOfBirth: '',
-            nationalId: '',
-            title: ''
+            companyName: '',
+            location: ''
           })
         }
       } catch (error) {
-        console.error('[Profile] Error:', error)
-      } finally {
-        setIsLoading(false)
+        console.error('[Profile] Error fetching user data:', error)
+        setUserInfo({
+          email: email,
+          name: name || 'User'
+        })
+        setEditForm({
+          firstName: name?.split(' ')[0] || '',
+          lastName: name?.split(' ').slice(1).join(' ') || '',
+          email: email || '',
+          phone: '',
+          address: '',
+          city: '',
+          postcode: '',
+          dateOfBirth: '',
+          nationalId: '',
+          title: ''
+        })
       }
+    } catch (error) {
+      console.error('[Profile] Error:', error)
+    } finally {
+      setIsLoading(false)
     }
+  }
 
+  // Fetch user data on mount
+  useEffect(() => {
     fetchUserData()
   }, [])
 
   const handleRefresh = () => {
-    window.location.reload()
+    fetchUserData()
   }
 
   const startLogoutHold = () => {

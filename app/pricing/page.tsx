@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { useRouter } from "next/navigation"
 import Cookies from "js-cookie"
-import { Check, Lock } from "lucide-react"
+import { Check } from "lucide-react"
 import ElectricBorder from '@/components/ElectricBorder.jsx'
 import { SharedNavbar } from "@/components/shared-navbar"
 import { FooterSection } from "@/components/footer-section"
@@ -49,6 +49,21 @@ export default function PricingPage() {
   const [hoveredCard, setHoveredCard] = useState<number | null>(null)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const { openRegisterModal } = useAuth()
+  const [discountPercent, setDiscountPercent] = useState<number | null>(null)
+
+  // Get discount from URL parameter
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const discount = params.get('discount')
+    if (discount) {
+      const discountNum = parseInt(discount, 10)
+      if (!isNaN(discountNum) && discountNum > 0 && discountNum <= 100) {
+        setDiscountPercent(discountNum)
+        // Store in sessionStorage for checkout page
+        sessionStorage.setItem('discountPercent', discountNum.toString())
+      }
+    }
+  }, [])
 
   // Fetch active subscription
   const { data: activeSubscription } = useQuery({
@@ -117,23 +132,25 @@ export default function PricingPage() {
   const handlePlanClick = (planId: string, e: React.MouseEvent) => {
     e.preventDefault()
     
-    // Check if user has active subscription
-    if (hasActiveSubscription) {
-      if (isLifetime) {
-        alert('You have a lifetime plan active. No additional purchase needed.')
-      } else {
-        alert(`You have an active subscription until ${subscriptionEndDate?.toLocaleDateString()}. Please wait until it expires to purchase a new plan.`)
-      }
+    // If user has active subscription, redirect to profile subscription page
+    if (hasActiveSubscription && isLoggedIn) {
+      router.push('/profile?tab=subscription')
       return
     }
     
     if (isLoggedIn) {
-      // If logged in, go directly to checkout
-      router.push(`/checkout?planId=${planId}`)
+      // If logged in, go directly to checkout with discount if available
+      const checkoutUrl = discountPercent 
+        ? `/checkout?planId=${planId}&discount=${discountPercent}`
+        : `/checkout?planId=${planId}`
+      router.push(checkoutUrl)
     } else {
-      // If not logged in, store planId and open registration modal
+      // If not logged in, store planId and discount, then open registration modal
       if (typeof window !== 'undefined') {
         sessionStorage.setItem('selectedPlanId', planId)
+        if (discountPercent) {
+          sessionStorage.setItem('discountPercent', discountPercent.toString())
+        }
       }
       openRegisterModal()
     }
@@ -167,7 +184,20 @@ export default function PricingPage() {
 
   // Transform API plans to component format
   const plans = plansData.map((plan: ServicePlan, index: number) => {
-    const yearlyPrice = Math.round(plan.price * 12 * 0.9) // 10% discount for yearly
+    // Calculate base prices
+    const baseMonthlyPrice = plan.price
+    const baseYearlyPrice = Math.round(plan.price * 12 * 0.9) // 10% discount for yearly
+    
+    // Apply discount if available
+    const applyDiscount = (price: number): number => {
+      if (discountPercent && discountPercent > 0 && discountPercent <= 100) {
+        return Math.round(price * (1 - discountPercent / 100))
+      }
+      return price
+    }
+    
+    const monthlyPrice = applyDiscount(baseMonthlyPrice)
+    const yearlyPrice = applyDiscount(baseYearlyPrice)
     
     let buttonText = "Get Started"
     if (plan.price === 0) {
@@ -182,8 +212,10 @@ export default function PricingPage() {
       id: plan.id,
       name: plan.name,
       price: { 
-        monthly: plan.price, 
-        yearly: yearlyPrice 
+        monthly: monthlyPrice, 
+        yearly: yearlyPrice,
+        originalMonthly: baseMonthlyPrice,
+        originalYearly: baseYearlyPrice
       },
       description: plan.description || `${plan.name} plan for your security needs.`,
       features: plan.features || [],
@@ -266,7 +298,7 @@ export default function PricingPage() {
       >
         <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-8 animate-on-scroll opacity-0 translate-y-8 transition-all duration-700">
+        <div className="text-center mb-8">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-4" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '700' }}>
             Choose the Plan
             <br />
@@ -281,7 +313,7 @@ export default function PricingPage() {
           <div className="flex items-center justify-center gap-4 mb-8">
             <button
               onClick={() => setBillingCycle("monthly")}
-              className={`px-6 py-2 rounded-full transition-all duration-300 ${
+              className={`px-6 py-2 rounded-full transition-all duration-300 cursor-pointer ${
                 billingCycle === "monthly" ? "bg-slate-700 text-white" : "text-slate-400 hover:text-white"
               }`}
             >
@@ -289,7 +321,7 @@ export default function PricingPage() {
             </button>
             <button
               onClick={() => setBillingCycle("yearly")}
-              className={`px-6 py-2 rounded-full transition-all duration-300 ${
+              className={`px-6 py-2 rounded-full transition-all duration-300 cursor-pointer ${
                 billingCycle === "yearly" ? "bg-slate-700 text-white" : "text-slate-400 hover:text-white"
               }`}
             >
@@ -326,9 +358,19 @@ export default function PricingPage() {
                   <p className="text-white/80 group-hover:text-white/90 text-sm mb-6" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}>{plan.description}</p>
 
                   <div className="flex items-baseline gap-2 mb-6">
+                    {discountPercent && plan.price.originalMonthly && plan.price.originalMonthly > 0 && (
+                      <span className="text-xl line-through text-white/50 group-hover:text-white/60 mr-2" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}>
+                        ${billingCycle === "monthly" ? plan.price.originalMonthly : plan.price.originalYearly}
+                      </span>
+                    )}
                     <span className="text-4xl font-bold text-white group-hover:text-white" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '700' }}>${plan.price[billingCycle]}</span>
                     <span className="text-white/70 group-hover:text-white/90" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}>/ {billingCycle === "monthly" ? "month" : "year"}</span>
-                    {billingCycle === "yearly" && plan.price.yearly > 0 && (
+                    {discountPercent && discountPercent > 0 && (
+                      <span className="bg-orange-500 text-white px-2 py-1 rounded text-xs ml-2" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '500' }}>
+                        {discountPercent}% OFF
+                      </span>
+                    )}
+                    {!discountPercent && billingCycle === "yearly" && plan.price.yearly > 0 && (
                       <span className="bg-orange-500 text-white px-2 py-1 rounded text-xs ml-2" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '500' }}>Save</span>
                     )}
                   </div>
@@ -353,70 +395,28 @@ export default function PricingPage() {
                   </ul>
                 </div>
 
-                {/* Active Subscription Warning */}
-                {hasActiveSubscription && (
-                  <div className="mb-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-                    <div className="flex items-start space-x-2">
-                      <Lock className="w-4 h-4 text-yellow-400 flex-shrink-0 mt-0.5" />
-                      <div className="flex-1">
-                        <p className="text-xs text-yellow-400 font-medium mb-1">
-                          Active Subscription
-                        </p>
-                        <p className="text-xs text-yellow-300/80">
-                          {isLifetime 
-                            ? 'Lifetime plan active. Cannot purchase additional plans.'
-                            : `Valid until ${subscriptionEndDate?.toLocaleDateString()}. Cannot purchase until expiry.`}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
                 {/* Subscribe Button */}
                 <button
                   type="button"
                   onClick={(e) => {
-                    if (hasActiveSubscription) {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      console.log('[Pricing Page] Button blocked - Active subscription:', hasActiveSubscription)
-                      return false
-                    }
-                    console.log('[Pricing Page] Button clicked:', { planId: plan.id, hasActiveSubscription })
+                    console.log('[Pricing Page] Button clicked:', { planId: plan.id })
                     handlePlanClick(plan.id, e)
                   }}
-                  disabled={hasActiveSubscription}
-                  aria-disabled={hasActiveSubscription}
-                  tabIndex={hasActiveSubscription ? -1 : 0}
-                  className={`w-full py-3 rounded-lg font-medium transition-all duration-300 ${
-                    hasActiveSubscription
-                      ? 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-60'
-                      : 'group-hover:scale-105 bg-orange-500 text-white cursor-pointer hover:bg-orange-600'
-                  } flex items-center justify-center`}
+                  className="w-full py-3 rounded-lg font-medium transition-all duration-300 group-hover:scale-105 bg-orange-500 text-white cursor-pointer hover:bg-orange-600 flex items-center justify-center"
                   style={{ 
                     fontFamily: 'Orbitron, sans-serif', 
-                    fontWeight: '600',
-                    pointerEvents: hasActiveSubscription ? 'none' : 'auto'
+                    fontWeight: '600'
                   }}
                 >
-                  {hasActiveSubscription ? (
-                    <>
-                      <Lock className="w-4 h-4 mr-2" />
-                      {isLifetime ? 'Lifetime Plan Active' : 'Subscription Active'}
-                    </>
-                  ) : (
-                    <>
-                      {plan.buttonText}
-                      <svg
-                        className="w-4 h-4 ml-2 transition-transform duration-300 group-hover:translate-x-1"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </>
-                  )}
+                  {plan.buttonText}
+                  <svg
+                    className="w-4 h-4 ml-2 transition-transform duration-300 group-hover:translate-x-1"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
                 </button>
               </div>
             );
@@ -442,11 +442,7 @@ export default function PricingPage() {
         </div>
         </div>
       </section>
-      
-      {/* FAQ Section */}
-      <div className="-mt-8">
-        <FAQSection />
-      </div>
+  
       
       <FooterSection />
     </div>

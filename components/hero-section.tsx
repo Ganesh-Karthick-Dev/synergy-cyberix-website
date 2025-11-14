@@ -7,8 +7,33 @@ import { useRegistration } from "@/components/registration-context"
 import { useAuth } from "@/components/auth-context"
 import Cookies from 'js-cookie'
 import { ProfileDropdown } from "@/components/profile-dropdown"
+import { useRouter } from "next/navigation"
+import { useQuery } from "@tanstack/react-query"
+
+async function fetchActiveSubscription() {
+  try {
+    const response = await fetch('/api/subscription/active', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      cache: 'no-store'
+    })
+
+    if (!response.ok) {
+      return null
+    }
+
+    const data = await response.json()
+    return data.data || null
+  } catch (error) {
+    return null
+  }
+}
 
 export function HeroSection() {
+  const router = useRouter()
   const [bannerHeight, setBannerHeight] = useState(0)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -16,6 +41,47 @@ export function HeroSection() {
   const { openModal } = useRegistration()
   const { openLoginModal, openRegisterModal } = useAuth()
   const sectionRef = useRef<HTMLElement>(null)
+
+  // Fetch active subscription
+  const { data: activeSubscription } = useQuery({
+    queryKey: ['activeSubscription', 'hero-section'],
+    queryFn: fetchActiveSubscription,
+    enabled: isLoggedIn,
+    refetchInterval: 60000,
+    retry: false,
+    staleTime: 0,
+  })
+
+  // Handle CTA button click
+  const handleCTAClick = () => {
+    const isAuth = Cookies.get('isAuthenticated') === 'true'
+    const token = Cookies.get('accessToken')
+    const loggedIn = isAuth || !!token
+
+    if (!loggedIn) {
+      // Not logged in - show login modal
+      openLoginModal()
+      return
+    }
+
+    // Check if user has active subscription
+    if (activeSubscription) {
+      const endDate = activeSubscription.endDate ? new Date(activeSubscription.endDate) : null
+      const isLifetime = activeSubscription.endDate === null
+      const now = new Date()
+      const isExpired = endDate ? endDate <= now : false
+      const hasActive = activeSubscription.status === 'ACTIVE' && (isLifetime || !isExpired)
+      
+      if (hasActive) {
+        // Has active subscription - redirect to download
+        router.push('/download')
+        return
+      }
+    }
+
+    // Logged in but no active subscription - show login (or redirect to pricing)
+    openLoginModal()
+  }
 
   useEffect(() => {
     const updateBannerHeight = () => {
@@ -368,7 +434,7 @@ export function HeroSection() {
         {/* Call to Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 animate-on-scroll opacity-0 translate-y-8 transition-all duration-700" style={{ transitionDelay: '400ms' }}>
           <Button 
-            onClick={openModal}
+            onClick={handleCTAClick}
             className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-lg text-lg font-semibold cursor-pointer shadow-lg hover:shadow-xl transition-all duration-300"
             style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}
           >

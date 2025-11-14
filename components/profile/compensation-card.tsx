@@ -64,7 +64,6 @@ export function CompensationCard({ compensations = defaultCompensations, showVie
               className="text-orange-400 hover:text-orange-300 text-sm font-medium inline-flex items-center gap-1 mt-4 transition-colors group"
             >
               View all
-              <span className="group-hover:translate-x-1 transition-transform">→</span>
             </a>
           )}
         </div>

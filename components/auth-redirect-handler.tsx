@@ -12,13 +12,22 @@ export function AuthRedirectHandler() {
   const router = useRouter()
 
   useEffect(() => {
-    // Check if user is logged in and has a selected planId
+    // Check if user is logged in and has a selected planId or redirect URL
     const checkAndRedirect = () => {
       const isAuth = Cookies.get('isAuthenticated') === 'true'
       const token = Cookies.get('accessToken')
       const loggedIn = isAuth || !!token
       
       if (loggedIn && typeof window !== 'undefined') {
+        // Check for redirect after login (e.g., from download page)
+        const redirectAfterLogin = sessionStorage.getItem('redirectAfterLogin')
+        if (redirectAfterLogin) {
+          sessionStorage.removeItem('redirectAfterLogin')
+          router.push(redirectAfterLogin)
+          return
+        }
+
+        // Check for selected planId (redirect to checkout)
         const selectedPlanId = sessionStorage.getItem('selectedPlanId')
         if (selectedPlanId) {
           // Clear the stored planId and redirect to checkout

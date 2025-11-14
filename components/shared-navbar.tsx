@@ -12,7 +12,31 @@ export function SharedNavbar() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [userInfo, setUserInfo] = useState<{ email?: string; name?: string } | null>(null)
+  const [navbarTop, setNavbarTop] = useState('0px')
   const { openLoginModal } = useAuth()
+
+  // Check if banner is visible and adjust navbar position
+  useEffect(() => {
+    const checkBannerVisibility = () => {
+      const banner = document.querySelector('[data-banner="true"]')
+      if (banner && window.getComputedStyle(banner).display !== 'none') {
+        const bannerHeight = banner.getBoundingClientRect().height
+        setNavbarTop(`${bannerHeight}px`)
+      } else {
+        setNavbarTop('0px')
+      }
+    }
+
+    checkBannerVisibility()
+    const interval = setInterval(checkBannerVisibility, 100)
+    const observer = new MutationObserver(checkBannerVisibility)
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style'] })
+    
+    return () => {
+      clearInterval(interval)
+      observer.disconnect()
+    }
+  }, [])
 
   // Check if user is logged in
   useEffect(() => {
@@ -41,7 +65,7 @@ export function SharedNavbar() {
   return (
     <>
       {/* Navigation Header */}
-      <header className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between py-3 px-6 lg:px-12 bg-black/20 backdrop-blur-md border-b border-white/10">
+      <header className="fixed left-0 right-0 z-40 flex items-center justify-between py-3 px-6 lg:px-12 bg-black/20 backdrop-blur-md border-b border-white/10" style={{ top: navbarTop }}>
         <Link href="/" className="flex items-center">
           <div className="w-48 h-20 rounded flex items-center justify-center">
             <img 
@@ -185,7 +209,7 @@ export function SharedNavbar() {
 
       {/* Mobile Menu Panel */}
       {mobileNavOpen && (
-        <div className="fixed left-0 right-0 z-30 mt-16 lg:hidden">
+        <div className="fixed left-0 right-0 z-[10001] lg:hidden" style={{ top: `calc(${navbarTop} + 64px)` }}>
           <div className="mx-4 rounded-lg bg-black/90 backdrop-blur-md border border-white/20 shadow-xl shadow-orange-500/10 p-6 space-y-4">
             <Link 
               onClick={() => setMobileNavOpen(false)} 

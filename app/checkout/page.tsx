@@ -17,7 +17,32 @@ export default function CheckoutPage() {
   const router = useRouter()
   const planId = searchParams.get('planId')
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly")
+  const [discountPercent, setDiscountPercent] = useState<number | null>(null)
   const { initiatePayment, isLoading: paymentLoading } = useRazorpay()
+
+  // Get discount from URL parameter or sessionStorage
+  useEffect(() => {
+    // First check URL parameter
+    const urlParams = new URLSearchParams(window.location.search)
+    const urlDiscount = urlParams.get('discount')
+    if (urlDiscount) {
+      const discountNum = parseInt(urlDiscount, 10)
+      if (!isNaN(discountNum) && discountNum > 0 && discountNum <= 100) {
+        setDiscountPercent(discountNum)
+        sessionStorage.setItem('discountPercent', discountNum.toString())
+        return
+      }
+    }
+    
+    // Fallback to sessionStorage
+    const discount = sessionStorage.getItem('discountPercent')
+    if (discount) {
+      const discountNum = parseInt(discount, 10)
+      if (!isNaN(discountNum) && discountNum > 0 && discountNum <= 100) {
+        setDiscountPercent(discountNum)
+      }
+    }
+  }, [])
 
   // Fetch active service plans
   const { data: plansData = [], isLoading } = useQuery({
@@ -55,11 +80,20 @@ export default function CheckoutPage() {
     loadUserDetails()
   }, [])
 
-  // Calculate price
-  const yearlyPrice = selectedPlan ? Math.round(selectedPlan.price * 12 * 0.9) : 0
-  const finalPrice = billingCycle === "monthly" 
-    ? (selectedPlan?.price || 0) 
-    : yearlyPrice
+  // Calculate price with discount
+  const baseMonthlyPrice = selectedPlan?.price || 0
+  const baseYearlyPrice = selectedPlan ? Math.round(selectedPlan.price * 12 * 0.9) : 0
+  
+  const applyDiscount = (price: number): number => {
+    if (discountPercent && discountPercent > 0 && discountPercent <= 100) {
+      return Math.round(price * (1 - discountPercent / 100))
+    }
+    return price
+  }
+  
+  const monthlyPrice = applyDiscount(baseMonthlyPrice)
+  const yearlyPrice = applyDiscount(baseYearlyPrice)
+  const finalPrice = billingCycle === "monthly" ? monthlyPrice : yearlyPrice
 
   // Redirect if no plan selected
   useEffect(() => {
@@ -369,11 +403,28 @@ export default function CheckoutPage() {
                   <span style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}>
                     {billingCycle === "monthly" ? "Monthly" : "Yearly"} Plan
                   </span>
-                  <span style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}>
-                    ${billingCycle === "monthly" ? selectedPlan.price : yearlyPrice}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    {discountPercent && (
+                      <span className="line-through text-white/40 text-sm" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}>
+                        ${billingCycle === "monthly" ? baseMonthlyPrice : baseYearlyPrice}
+                      </span>
+                    )}
+                    <span style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}>
+                      ${billingCycle === "monthly" ? monthlyPrice : yearlyPrice}
+                    </span>
+                  </div>
                 </div>
-                {billingCycle === "yearly" && (
+                {discountPercent && discountPercent > 0 && (
+                  <div className="flex justify-between text-orange-400">
+                    <span style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}>
+                      Special Offer Discount ({discountPercent}%)
+                    </span>
+                    <span style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}>
+                      -${Math.round((billingCycle === "monthly" ? baseMonthlyPrice : baseYearlyPrice) * (discountPercent / 100))}
+                    </span>
+                  </div>
+                )}
+                {billingCycle === "yearly" && !discountPercent && (
                   <div className="flex justify-between text-orange-400">
                     <span style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}>
                       Yearly Discount (10%)

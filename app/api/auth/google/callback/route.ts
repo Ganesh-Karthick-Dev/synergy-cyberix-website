@@ -62,15 +62,17 @@ export async function GET(request: NextRequest) {
       let location = response.headers.get('location');
       console.log('🔵 [Website Callback] Backend redirect location:', location);
       
-      // Fix redirect URL: if backend redirects to port 3000 (admin), change it to 3001 (website)
+      // Fix redirect URL: if backend redirects to port 3000 (admin), change it to 4006 (website)
       if (location) {
-        // Replace localhost:3000 with localhost:3001 (handle both http and https)
-        location = location.replace(/https?:\/\/localhost:3000/gi, 'http://localhost:3001');
+        // Replace localhost:3000 with localhost:4006 (handle both http and https)
+        location = location.replace(/https?:\/\/localhost:3000/gi, 'http://localhost:4006');
         // Also handle if it redirects to /signin (admin route) - change to /login (website route)
         location = location.replace(/\/signin(\?|$)/g, '/login$1');
-        // Also replace any other port 3000 references (in case of different protocols)
-        location = location.replace(/:3000\//g, ':3001/');
-        location = location.replace(/:3000$/g, ':3001');
+        // Also replace any other port 3000 or 3001 references (in case of different protocols)
+        location = location.replace(/:3000\//g, ':4006/');
+        location = location.replace(/:3000$/g, ':4006');
+        location = location.replace(/:3001\//g, ':4006/');
+        location = location.replace(/:3001$/g, ':4006');
         console.log('🔵 [Website Callback] Fixed redirect location:', location);
       }
       
@@ -86,25 +88,73 @@ export async function GET(request: NextRequest) {
         let redirectUrl: URL;
         if (location.startsWith('http://') || location.startsWith('https://')) {
           redirectUrl = new URL(location);
-          // CRITICAL: Always force port 3001 for website (not admin port 3000)
+          // CRITICAL: Always force port 4006 for website (not admin port 3000)
           if (redirectUrl.hostname === 'localhost') {
-            redirectUrl.port = '3001';
+            redirectUrl.port = '4006';
             redirectUrl.protocol = 'http:';
           }
         } else {
-          // Relative URL - construct using website origin (port 3001)
-          const websiteOrigin = `${request.nextUrl.protocol}//${request.nextUrl.hostname}:3001`;
+          // Relative URL - construct using website origin (port 4006)
+          const websiteOrigin = `${request.nextUrl.protocol}//${request.nextUrl.hostname}:4006`;
           redirectUrl = new URL(location, websiteOrigin);
         }
-        
-        // Final safety check: ensure we're redirecting to port 3001, not 3000
-        if (redirectUrl.hostname === 'localhost' && redirectUrl.port !== '3001') {
-          console.warn('🔵 [Website Callback] ⚠️ Port mismatch detected, forcing port 3001');
-          redirectUrl.port = '3001';
+
+        // Final safety check: ensure we're redirecting to port 4006, not 3000 or 3001
+        if (redirectUrl.hostname === 'localhost' && redirectUrl.port !== '4006') {
+          console.warn('🔵 [Website Callback] ⚠️ Port mismatch detected, forcing port 4006');
+          redirectUrl.port = '4006';
         }
-        
+
         console.log('🔵 [Website Callback] Final redirect URL:', redirectUrl.toString());
         const redirectResponse = NextResponse.redirect(redirectUrl);
+
+        // After successful authentication, try to fetch user data and set readable cookies
+        try {
+          console.log('🔵 [Website Callback] Attempting to fetch user profile data...');
+          const profileResponse = await fetch(`${backendUrl}/api/auth/profile`, {
+            method: 'GET',
+            headers: {
+              'Cookie': request.headers.get('cookie') || '',
+            },
+            credentials: 'include',
+          });
+
+          if (profileResponse.ok) {
+            const profileData = await profileResponse.json();
+            const userData = profileData?.data;
+
+            if (userData) {
+              console.log('🔵 [Website Callback] Setting user info cookies:', {
+                email: userData.email,
+                firstName: userData.firstName,
+                lastName: userData.lastName,
+              });
+
+              // Set readable cookies for client-side access
+              const cookieOptions = {
+                httpOnly: false,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: (process.env.NODE_ENV === 'production' ? 'strict' : 'lax') as 'strict' | 'lax',
+                maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+                path: '/',
+              };
+
+              if (userData.email) {
+                redirectResponse.cookies.set('userEmail', userData.email, cookieOptions);
+              }
+
+              if (userData.firstName || userData.lastName) {
+                const fullName = [userData.firstName, userData.lastName].filter(Boolean).join(' ') || userData.email?.split('@')[0] || 'User';
+                redirectResponse.cookies.set('userName', fullName, cookieOptions);
+              }
+            }
+          } else {
+            console.warn('🔵 [Website Callback] Could not fetch user profile data:', profileResponse.status);
+          }
+        } catch (profileError) {
+          console.error('🔵 [Website Callback] Error fetching user profile:', profileError);
+          // Don't fail the authentication if profile fetch fails
+        }
         
         // Forward Set-Cookie headers to the browser
         if (setCookieHeader) {
@@ -195,7 +245,7 @@ export async function GET(request: NextRequest) {
     console.log('🔵 [Website Callback] No redirect from backend, redirecting to home');
     const websiteUrl = new URL('/', request.url);
     websiteUrl.hostname = 'localhost';
-    websiteUrl.port = '3001';
+    websiteUrl.port = '4006';
     return NextResponse.redirect(websiteUrl);
   } catch (error: any) {
     console.error('🔵 [Website Callback] Error:', {

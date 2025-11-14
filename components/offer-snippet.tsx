@@ -2,10 +2,79 @@
 import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { useRegistration } from "@/components/registration-context"
+import { useRouter } from "next/navigation"
+import Cookies from "js-cookie"
+import { useAuth } from "@/components/auth-context"
+import { useQuery } from "@tanstack/react-query"
+
+async function fetchActiveSubscription() {
+  try {
+    const response = await fetch('/api/subscription/active', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      cache: 'no-store'
+    })
+
+    if (!response.ok) {
+      return null
+    }
+
+    const data = await response.json()
+    return data.data || null
+  } catch (error) {
+    return null
+  }
+}
 
 export function OfferSnippet() {
+  const router = useRouter()
+  const { openLoginModal } = useAuth()
   const [isVisible, setIsVisible] = useState(true)
-  const { openModal } = useRegistration()
+  const isLoggedIn = Cookies.get('isAuthenticated') === 'true' || !!Cookies.get('accessToken')
+
+  // Fetch active subscription
+  const { data: activeSubscription } = useQuery({
+    queryKey: ['activeSubscription', 'offer-snippet'],
+    queryFn: fetchActiveSubscription,
+    enabled: isLoggedIn,
+    refetchInterval: 60000,
+    retry: false,
+    staleTime: 0,
+  })
+
+  // Handle CTA button click
+  const handleCTAClick = () => {
+    const isAuth = Cookies.get('isAuthenticated') === 'true'
+    const token = Cookies.get('accessToken')
+    const loggedIn = isAuth || !!token
+
+    if (!loggedIn) {
+      // Not logged in - show login modal
+      openLoginModal()
+      return
+    }
+
+    // Check if user has active subscription
+    if (activeSubscription) {
+      const endDate = activeSubscription.endDate ? new Date(activeSubscription.endDate) : null
+      const isLifetime = activeSubscription.endDate === null
+      const now = new Date()
+      const isExpired = endDate ? endDate <= now : false
+      const hasActive = activeSubscription.status === 'ACTIVE' && (isLifetime || !isExpired)
+      
+      if (hasActive) {
+        // Has active subscription - redirect to download
+        router.push('/download')
+        return
+      }
+    }
+
+    // Logged in but no active subscription - show login
+    openLoginModal()
+  }
 
   useEffect(() => {
     if (isVisible) {
@@ -41,7 +110,7 @@ export function OfferSnippet() {
           {/* Right side - Button and Close */}
           <div className="flex items-center gap-3 ml-4">
             <Button 
-              onClick={openModal}
+              onClick={handleCTAClick}
               size="sm"
               className="bg-white text-orange-600 hover:bg-orange-50 px-4 py-2 text-sm font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 whitespace-nowrap cursor-pointer"
               style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}

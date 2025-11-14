@@ -2,17 +2,52 @@
 
 import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useRouter } from 'next/navigation'
 import { getActiveAds } from '@/lib/api/website'
 import { trackAdImpression, trackAdClick, type Ad } from '@/lib/api/ads'
 import { X } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
 export function AdBanner() {
+  const router = useRouter()
   const [isVisible, setIsVisible] = useState(true)
   const [hasTrackedImpressions, setHasTrackedImpressions] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(true) // For mobile modal
   const [isModalClosed, setIsModalClosed] = useState(false) // Track if user explicitly closed the modal
+
+  // Extract discount percentage from ad title (e.g., "75% offer" -> 75)
+  const extractDiscountPercentage = (title: string): number | null => {
+    const match = title.match(/(\d+)%/i)
+    return match ? parseInt(match[1], 10) : null
+  }
+
+  // Handle Purchase Now button click
+  const handlePurchaseNow = async (ad: Ad) => {
+    try {
+      // Track ad click
+      await trackAdClick(ad.id)
+      
+      // Extract discount percentage
+      const discountPercent = extractDiscountPercentage(ad.title)
+      
+      // Navigate to pricing page with discount
+      if (discountPercent) {
+        router.push(`/pricing?discount=${discountPercent}`)
+      } else {
+        router.push('/pricing')
+      }
+    } catch (error) {
+      console.error(`[AdBanner] Failed to track click for ad ${ad.id}:`, error)
+      // Still navigate even if tracking fails
+      const discountPercent = extractDiscountPercentage(ad.title)
+      if (discountPercent) {
+        router.push(`/pricing?discount=${discountPercent}`)
+      } else {
+        router.push('/pricing')
+      }
+    }
+  }
 
   // Detect mobile screen size
   useEffect(() => {
@@ -168,7 +203,7 @@ export function AdBanner() {
               </DialogTitle>
               <button
                 onClick={() => handleModalClose(false)}
-                className="text-white/70 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10"
+                className="text-white/70 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10 cursor-pointer"
                 aria-label="Close"
               >
                 <X className="w-5 h-5" />
@@ -191,15 +226,13 @@ export function AdBanner() {
                 <p className="text-gray-300 text-sm leading-relaxed" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}>
                   {ad.content}
                 </p>
-                {ad.link && (
-                  <button
-                    onClick={() => handleAdClick(ad)}
-                    className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg shadow-orange-500/30"
-                    style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}
-                  >
-                    Learn More →
-                  </button>
-                )}
+                <button
+                  onClick={() => handlePurchaseNow(ad)}
+                  className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg shadow-orange-500/30"
+                  style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}
+                >
+                  Purchase Now
+                </button>
                 <button
                   onClick={() => handleModalClose(false)}
                   className="w-full bg-white/10 hover:bg-white/20 text-white font-medium py-2.5 px-6 rounded-lg transition-all duration-300 border border-white/20"
@@ -253,7 +286,7 @@ export function AdBanner() {
                     className="bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors backdrop-blur-sm whitespace-nowrap cursor-pointer"
                     style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}
                   >
-                    Learn More →
+                    Learn More
                   </button>
                 )}
               </div>
@@ -262,17 +295,20 @@ export function AdBanner() {
           
           {/* Fixed button on the right side */}
           <div className="absolute right-4 top-1/2 -translate-y-1/2 z-50 flex items-center gap-2">
-            <button
-              className="relative whitespace-nowrap px-6 py-2.5 rounded-lg font-semibold text-sm text-orange-600 bg-white/95 backdrop-blur-sm border border-white/50 shadow-[0_4px_20px_rgba(0,0,0,0.1),0_0_0_1px_rgba(255,255,255,0.5)_inset] hover:shadow-[0_6px_30px_rgba(0,0,0,0.15),0_0_0_1px_rgba(255,255,255,0.7)_inset] hover:bg-white transition-all hover:scale-105 active:scale-95 overflow-hidden group"
-              style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}
-            >
-              {/* Glossy overlay gradient */}
-              <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-white/20 to-transparent opacity-60 pointer-events-none rounded-lg"></div>
-              {/* Highlight effect */}
-              <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/80 to-transparent rounded-t-lg pointer-events-none"></div>
-              {/* Text with slight shadow for depth */}
-              <span className="relative z-10 drop-shadow-sm">Protect your website today</span>
-            </button>
+            {activeAds.length > 0 && (
+              <button
+                onClick={() => handlePurchaseNow(activeAds[0])}
+                className="relative whitespace-nowrap px-6 py-2.5 rounded-lg font-semibold text-sm text-orange-600 bg-white/95 backdrop-blur-sm border border-white/50 shadow-[0_4px_20px_rgba(0,0,0,0.1),0_0_0_1px_rgba(255,255,255,0.5)_inset] hover:shadow-[0_6px_30px_rgba(0,0,0,0.15),0_0_0_1px_rgba(255,255,255,0.7)_inset] hover:bg-white transition-all hover:scale-105 active:scale-95 overflow-hidden group cursor-pointer"
+                style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}
+              >
+                {/* Glossy overlay gradient */}
+                <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-white/20 to-transparent opacity-60 pointer-events-none rounded-lg"></div>
+                {/* Highlight effect */}
+                <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/80 to-transparent rounded-t-lg pointer-events-none"></div>
+                {/* Text with slight shadow for depth */}
+                <span className="relative z-10 drop-shadow-sm">Purchase Now</span>
+              </button>
+            )}
             
             {/* Close Button */}
             <button

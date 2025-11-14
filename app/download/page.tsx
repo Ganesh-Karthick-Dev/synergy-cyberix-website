@@ -4,13 +4,119 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Download } from "lucide-react"
 import { SharedNavbar } from "@/components/shared-navbar"
 import { FooterSection } from "@/components/footer-section"
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import Cookies from "js-cookie"
+import { useAuth } from "@/components/auth-context"
+import { useQuery } from "@tanstack/react-query"
+
+async function fetchActiveSubscription() {
+  try {
+    const response = await fetch('/api/subscription/active', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      cache: 'no-store'
+    })
+
+    if (!response.ok) {
+      return null
+    }
+
+    const data = await response.json()
+    return data.data || null
+  } catch (error) {
+    console.error('[Download Page] Error fetching subscription:', error)
+    return null
+  }
+}
 
 export const dynamic = 'force-dynamic'
 
 export default function DownloadPage() {
+  const router = useRouter()
+  const { openLoginModal } = useAuth()
+  const [isChecking, setIsChecking] = useState(true)
+  const [hasAccess, setHasAccess] = useState(false)
+
+  // Check authentication and subscription
+  const { data: activeSubscription } = useQuery({
+    queryKey: ['activeSubscription', 'download-page'],
+    queryFn: fetchActiveSubscription,
+    enabled: true,
+    refetchInterval: 60000,
+    retry: false,
+    staleTime: 0,
+  })
+
+  useEffect(() => {
+    const checkAccess = () => {
+      const isAuth = Cookies.get('isAuthenticated') === 'true'
+      const token = Cookies.get('accessToken')
+      const loggedIn = isAuth || !!token
+
+      if (!loggedIn) {
+        // Not logged in - redirect to login with return URL
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('redirectAfterLogin', '/download')
+        }
+        openLoginModal()
+        // Don't set hasAccess, will redirect
+        setIsChecking(false)
+        return
+      }
+
+      // Check if user has active subscription
+      if (activeSubscription) {
+        const endDate = activeSubscription.endDate ? new Date(activeSubscription.endDate) : null
+        const isLifetime = activeSubscription.endDate === null
+        const now = new Date()
+        const isExpired = endDate ? endDate <= now : false
+        const hasActive = activeSubscription.status === 'ACTIVE' && (isLifetime || !isExpired)
+        
+        if (hasActive) {
+          setHasAccess(true)
+          setIsChecking(false)
+          return
+        }
+      }
+
+      // Logged in but no active subscription - redirect to pricing
+      router.push('/pricing')
+      setIsChecking(false)
+    }
+
+    // Wait a bit for subscription data to load
+    if (activeSubscription !== undefined) {
+      checkAccess()
+    }
+  }, [activeSubscription, router, openLoginModal])
+
   const handleDownload = (platform: string) => {
     // Simulate download - in real app, this would trigger actual download
     alert(`Downloading Cyberix Security Scanner for ${platform}...`)
+  }
+
+  // Show loading state while checking
+  if (isChecking || !hasAccess) {
+    return (
+      <div 
+        className="min-h-screen relative flex flex-col"
+        style={{
+          backgroundImage: "url('/hero/middle-1.png')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat"
+        }}
+      >
+        <SharedNavbar />
+        <div className="flex-1 flex items-center justify-center pt-24">
+          <div className="text-white text-xl">Checking access...</div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -37,7 +143,7 @@ export default function DownloadPage() {
             Download Cyberix Security Scanner
           </h1>
           <p className="text-xl text-gray-300 mb-12 animate-slide-up" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400', animationDelay: '0.4s' }}>
-            Choose your platform to download the free security scanner
+            {/* Choose your platform to download the free security scanner */}
           </p>
         </div>
 
@@ -95,7 +201,7 @@ export default function DownloadPage() {
           </Card> */}
 
           {/* Linux Download */}
-          <Card className="bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl hover:shadow-orange-500/20 transition-all duration-300 hover:scale-105 animate-slide-up" style={{ animationDelay: '1.0s' }}>
+          {/* <Card className="bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl hover:shadow-orange-500/20 transition-all duration-300 hover:scale-105 animate-slide-up" style={{ animationDelay: '1.0s' }}>
             <CardHeader className="text-center">
               <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4">
                 <img 
@@ -120,7 +226,7 @@ export default function DownloadPage() {
                 Download for Linux
               </Button>
             </CardContent>
-          </Card>
+          </Card> */}
         </div>
 
         <div className="text-center mt-16 animate-slide-up" style={{ animationDelay: '1.2s' }}>
