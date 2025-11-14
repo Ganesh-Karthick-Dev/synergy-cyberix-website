@@ -85,28 +85,34 @@ export default function CheckoutPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{
+      <div className="min-h-screen flex flex-col" style={{
         backgroundImage: "url('/hero/middle-1.png')",
         backgroundSize: "cover",
         backgroundPosition: "center",
       }}>
-        <div className="text-white text-xl">Loading...</div>
+        <SharedNavbar />
+        <div className="flex-1 flex items-center justify-center pt-24">
+          <div className="text-white text-xl">Loading...</div>
+        </div>
       </div>
     )
   }
 
   if (!selectedPlan) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{
+      <div className="min-h-screen flex flex-col" style={{
         backgroundImage: "url('/hero/middle-1.png')",
         backgroundSize: "cover",
         backgroundPosition: "center",
       }}>
-        <div className="text-center text-white">
-          <h2 className="text-2xl font-bold mb-4">Plan not found</h2>
-          <Button onClick={() => router.push('/pricing')} className="bg-orange-500 hover:bg-orange-600">
-            View Plans
-          </Button>
+        <SharedNavbar />
+        <div className="flex-1 flex items-center justify-center pt-24">
+          <div className="text-center text-white">
+            <h2 className="text-2xl font-bold mb-4">Plan not found</h2>
+            <Button onClick={() => router.push('/pricing')} className="bg-orange-500 hover:bg-orange-600">
+              View Plans
+            </Button>
+          </div>
         </div>
       </div>
     )

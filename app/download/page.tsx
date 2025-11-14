@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Download } from "lucide-react"
+import { SharedNavbar } from "@/components/shared-navbar"
 import { FooterSection } from "@/components/footer-section"
 
 export const dynamic = 'force-dynamic'
@@ -22,44 +23,10 @@ export default function DownloadPage() {
         backgroundRepeat: "no-repeat"
       }}
     >
-      {/* Navigation Header */}
-      <header className="fixed left-0 right-0 z-40 flex items-center justify-between py-3 px-6 lg:px-12 bg-black/20 backdrop-blur-md border-b border-white/10">
-        <div className="flex items-center">
-          <div className="w-48 h-20 rounded flex items-center justify-center">
-            <img 
-              src="/Cybersecurity research-01.png" 
-              alt="Cyberix Logo" 
-              className="w-full h-full object-contain"
-            />
-          </div>
-        </div>
-
-        <nav className="hidden md:flex items-center space-x-10">
-          <a href="/" className="text-white hover:text-orange-400 transition-colors text-lg font-medium" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '500' }}>
-            Home
-          </a>
-          <a href="/#about-us" className="text-white hover:text-orange-400 transition-colors text-lg font-medium" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '500' }}>
-            About us
-          </a>
-          <a href="/#why-choose" className="text-white hover:text-orange-400 transition-colors text-lg font-medium" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '500' }}>
-            Services
-          </a>
-          <a href="/#warning" className="text-white hover:text-orange-400 transition-colors text-lg font-medium" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '500' }}>
-            Contact us
-          </a>
-        </nav>
-
-        <Button 
-          onClick={() => window.location.href = '/'}
-          className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-lg text-lg font-semibold cursor-pointer" 
-          style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}
-        >
-          Login
-        </Button>
-      </header>
+      <SharedNavbar />
 
       {/* Main Content */}
-      <div className="relative pt-30 pb-16 min-h-[80vh]">
+      <div className="relative pt-32 pb-16 min-h-[80vh]">
         {/* Orange decorative element in top-left corner */}
         <div className="absolute top-8 left-8 w-20 h-20 bg-orange-500/20 rounded-full blur-xl animate-pulse"></div>
         <div className="absolute top-12 left-12 w-12 h-12 bg-orange-400/30 rounded-full blur-lg animate-pulse" style={{ animationDelay: '1s' }}></div>
@@ -74,7 +41,7 @@ export default function DownloadPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
           {/* Windows Download */}
           <Card className="bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl hover:shadow-orange-500/20 transition-all duration-300 hover:scale-105 animate-slide-up" style={{ animationDelay: '0.6s' }}>
             <CardHeader className="text-center">

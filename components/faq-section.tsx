@@ -69,7 +69,7 @@ export function FAQSection({ className = "" }: FAQSectionProps) {
   return (
     <section 
       ref={sectionRef}
-      className={`relative py-8 px-4 ${className}`}
+      className={`relative pt-8 pb-30 px-4 ${className}`}
       style={{
         backgroundImage: "url('/hero/above footer.png')",
         backgroundSize: "cover",
