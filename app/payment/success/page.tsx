@@ -182,8 +182,8 @@ export default function PaymentSuccessPage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
               onClick={() => router.push('/profile?tab=subscription')}
-              className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3"
-              style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}
+              className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white px-8 py-3 cursor-pointer"
+              style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600', color: '#ffffff' }}
             >
               <Receipt className="w-4 h-4 mr-2" />
               View Subscription
@@ -193,8 +193,8 @@ export default function PaymentSuccessPage() {
             <Button
               onClick={downloadInvoice}
               variant="outline"
-              className="border-white/20 text-white hover:bg-white/10 px-8 py-3"
-              style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}
+              className="border-orange-500/50 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 hover:text-orange-300 px-8 py-3 cursor-pointer"
+              style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600', color: '#fb923c' }}
             >
               <Receipt className="w-4 h-4 mr-2" />
               Download Invoice
@@ -203,8 +203,8 @@ export default function PaymentSuccessPage() {
             <Button
               onClick={() => router.push('/download')}
               variant="outline"
-              className="border-white/20 text-white hover:bg-white/10 px-8 py-3"
-              style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}
+              className="border-orange-500/50 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 hover:text-orange-300 px-8 py-3 cursor-pointer"
+              style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600', color: '#fb923c' }}
             >
               <Home className="w-4 h-4 mr-2" />
               Download Software

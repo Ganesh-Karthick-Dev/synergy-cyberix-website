@@ -147,9 +147,9 @@ export default function DownloadPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+        <div className="flex justify-center items-start max-w-4xl mx-auto">
           {/* Windows Download */}
-          <Card className="bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl hover:shadow-orange-500/20 transition-all duration-300 hover:scale-105 animate-slide-up" style={{ animationDelay: '0.6s' }}>
+          <Card className="w-full max-w-md bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl hover:shadow-orange-500/20 transition-all duration-300 hover:scale-105 animate-slide-up" style={{ animationDelay: '0.6s' }}>
             <CardHeader className="text-center">
               <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4">
                 <img 

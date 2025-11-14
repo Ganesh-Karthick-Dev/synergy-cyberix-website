@@ -114,62 +114,66 @@ export function EditProfileTab({ initialForm, onSuccess }: EditProfileTabProps) 
   }
 
   return (
-    <Card className="bg-gradient-to-br from-[#1a1a1a] to-[#1f1f1f] border border-orange-500/20 shadow-lg">
+    <Card className="bg-gradient-to-br from-[#1a1a1a] via-[#1f1f1f] to-[#1a1a1a] border border-orange-500/20 shadow-xl shadow-orange-500/5 hover:shadow-orange-500/10 transition-all duration-300 overflow-hidden relative">
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500/50 via-orange-500 to-orange-500/50"></div>
       <CardHeader className="pb-6">
         <CardTitle className="text-2xl font-bold text-white flex items-center gap-3 mb-2" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '700' }}>
-          <div className="w-1 h-6 bg-gradient-to-b from-orange-500 to-orange-600 rounded-full"></div>
+          <div className="w-1.5 h-7 bg-gradient-to-b from-orange-500 to-orange-600 rounded-full shadow-sm shadow-orange-500/50"></div>
           Edit Profile
         </CardTitle>
-        <CardDescription className="text-gray-400 text-base">Update your personal information</CardDescription>
+        <CardDescription className="text-gray-400 text-base">Update your personal information and preferences</CardDescription>
       </CardHeader>
       <CardContent>
         {successMessage && (
-          <div className="mb-4 p-3 bg-green-500/20 border border-green-500/50 rounded-lg text-green-400 text-sm">
+          <div className="mb-6 p-4 bg-gradient-to-r from-green-500/20 to-green-600/20 border border-green-500/50 rounded-xl text-green-400 text-sm font-medium shadow-lg shadow-green-500/10 flex items-center gap-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
             {successMessage}
           </div>
         )}
         <form onSubmit={handleUpdateProfile} className="space-y-6">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label htmlFor="edit-firstName" className="text-sm text-gray-300">First Name</Label>
-                      <Input
-                        id="edit-firstName"
-                        value={editForm.firstName}
-                        onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })}
-                        className="bg-[#2a2a2a] text-white border-orange-500/30 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/50 transition-all"
-                        placeholder="First name"
-                      />
+              <Label htmlFor="edit-firstName" className="text-sm text-gray-300 font-medium">First Name</Label>
+              <Input
+                id="edit-firstName"
+                value={editForm.firstName}
+                onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })}
+                className="bg-[#2a2a2a]/80 text-white border-orange-500/30 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/50 transition-all h-11 hover:border-orange-500/50"
+                placeholder="First name"
+              />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-lastName" className="text-sm text-gray-300">Last Name</Label>
+              <Label htmlFor="edit-lastName" className="text-sm text-gray-300 font-medium">Last Name</Label>
               <Input
                 id="edit-lastName"
                 value={editForm.lastName}
                 onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })}
-                className="bg-[#2a2a2a] text-white border-orange-500/30 focus:border-orange-500"
+                className="bg-[#2a2a2a]/80 text-white border-orange-500/30 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/50 transition-all h-11 hover:border-orange-500/50"
                 placeholder="Last name"
               />
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="edit-email" className="text-sm text-gray-300">Email</Label>
+            <Label htmlFor="edit-email" className="text-sm text-gray-300 font-medium">Email</Label>
             <Input
               id="edit-email"
               type="email"
               value={editForm.email}
               onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-              className="bg-[#2a2a2a] text-white border-orange-500/30 focus:border-orange-500"
+              className="bg-[#2a2a2a]/80 text-white border-orange-500/30 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/50 transition-all h-11 hover:border-orange-500/50"
               placeholder="Email"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="edit-phone" className="text-sm text-gray-300">Phone *</Label>
+            <Label htmlFor="edit-phone" className="text-sm text-gray-300 font-medium">Phone *</Label>
             <Input
               id="edit-phone"
               type="tel"
               value={editForm.phone}
               onChange={(e) => handlePhoneChange(e.target.value)}
-              className={`bg-[#2a2a2a] text-white border-orange-500/30 focus:border-orange-500 ${errors.phone ? 'border-red-500' : ''}`}
+              className={`bg-[#2a2a2a]/80 text-white border-orange-500/30 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/50 transition-all h-11 hover:border-orange-500/50 ${errors.phone ? 'border-red-500 focus:border-red-500 focus:ring-red-500/50' : ''}`}
               placeholder="Phone"
             />
             {/* VALIDATION COMMENTED OUT - Uncomment if needed */}
@@ -177,34 +181,48 @@ export function EditProfileTab({ initialForm, onSuccess }: EditProfileTabProps) 
               <p className="text-sm text-red-400 mt-1">{errors.phone}</p>
             )} */}
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="edit-companyName" className="text-sm text-gray-300">Company Name</Label>
-            <Input
-              id="edit-companyName"
-              value={editForm.companyName}
-              onChange={(e) => setEditForm({ ...editForm, companyName: e.target.value })}
-              className="bg-[#2a2a2a] text-white border-orange-500/30 focus:border-orange-500"
-              placeholder="Company Name"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="edit-companyName" className="text-sm text-gray-300 font-medium">Company Name</Label>
+              <Input
+                id="edit-companyName"
+                value={editForm.companyName}
+                onChange={(e) => setEditForm({ ...editForm, companyName: e.target.value })}
+                className="bg-[#2a2a2a]/80 text-white border-orange-500/30 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/50 transition-all h-11 hover:border-orange-500/50"
+                placeholder="Company Name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-location" className="text-sm text-gray-300 font-medium">Location</Label>
+              <Input
+                id="edit-location"
+                value={editForm.location}
+                onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
+                className="bg-[#2a2a2a]/80 text-white border-orange-500/30 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/50 transition-all h-11 hover:border-orange-500/50"
+                placeholder="Location"
+              />
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="edit-location" className="text-sm text-gray-300">Location</Label>
-            <Input
-              id="edit-location"
-              value={editForm.location}
-              onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
-              className="bg-[#2a2a2a] text-white border-orange-500/30 focus:border-orange-500"
-              placeholder="Location"
-            />
+          <div className="pt-4">
+            <Button
+              type="submit"
+              disabled={updateProfileMutation.isPending}
+              className="w-full bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white py-3.5 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-orange-500/50 disabled:opacity-50 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+              style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}
+            >
+              {updateProfileMutation.isPending ? (
+                <span className="flex items-center gap-2">
+                  <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Saving...
+                </span>
+              ) : (
+                'Save Changes'
+              )}
+            </Button>
           </div>
-          <Button
-            type="submit"
-            disabled={updateProfileMutation.isPending}
-            className="w-full bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-orange-500/50 disabled:opacity-50"
-            style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}
-          >
-            {updateProfileMutation.isPending ? 'Saving...' : 'Save Changes'}
-          </Button>
         </form>
       </CardContent>
     </Card>

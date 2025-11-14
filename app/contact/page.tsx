@@ -32,12 +32,37 @@ export default function ContactPage() {
     return () => observer.disconnect()
   }, [])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitMessage, setSubmitMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle form submission here
-    console.log("Form submitted:", formData)
-    alert("Thank you for your message! We'll get back to you soon.")
-    setFormData({ name: "", email: "", subject: "", message: "" })
+    setIsSubmitting(true)
+    setSubmitMessage(null)
+
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setSubmitMessage({ type: 'success', text: data.message || "Thank you for your message! We'll get back to you soon." })
+        setFormData({ name: "", email: "", subject: "", message: "" })
+      } else {
+        setSubmitMessage({ type: 'error', text: data.error?.message || 'Failed to send message. Please try again.' })
+      }
+    } catch (error) {
+      console.error('Error submitting contact form:', error)
+      setSubmitMessage({ type: 'error', text: 'Failed to send message. Please try again.' })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -151,6 +176,15 @@ export default function ContactPage() {
               <h2 className="text-2xl font-bold text-white mb-6" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '700' }}>
                 Send us a Message
               </h2>
+              {submitMessage && (
+                <div className={`mb-4 p-4 rounded-lg ${
+                  submitMessage.type === 'success' 
+                    ? 'bg-green-500/20 border border-green-500/50 text-green-400' 
+                    : 'bg-red-500/20 border border-red-500/50 text-red-400'
+                }`}>
+                  <p className="text-sm font-medium">{submitMessage.text}</p>
+                </div>
+              )}
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label htmlFor="name" className="block text-white/80 text-sm mb-2" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}>
@@ -222,11 +256,24 @@ export default function ContactPage() {
 
                 <button
                   type="submit"
-                  className="w-full bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2"
+                  disabled={isSubmitting}
+                  className="w-full bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                   style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}
                 >
-                  Send Message
-                  <Send className="w-5 h-5" />
+                  {isSubmitting ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      Send Message
+                      <Send className="w-5 h-5" />
+                    </>
+                  )}
                 </button>
               </form>
             </div>

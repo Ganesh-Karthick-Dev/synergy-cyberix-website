@@ -110,11 +110,17 @@ export default function CheckoutPage() {
     // Prepare user details for Razorpay
     const fullName = `${userDetails.firstName} ${userDetails.lastName}`.trim()
 
-    await initiatePayment(planId, {
-      name: fullName || undefined,
-      email: userDetails.email || undefined,
-      contact: userDetails.phone || undefined,
-    })
+    // Pass the discounted final price and discount percentage
+    await initiatePayment(
+      planId,
+      {
+        name: fullName || undefined,
+        email: userDetails.email || undefined,
+        contact: userDetails.phone || undefined,
+      },
+      finalPrice, // Pass the discounted amount
+      discountPercent || undefined // Pass the discount percentage
+    )
   }
 
   if (isLoading) {

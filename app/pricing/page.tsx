@@ -138,18 +138,30 @@ export default function PricingPage() {
       return
     }
     
+    // Get discount from state or sessionStorage
+    let currentDiscount = discountPercent
+    if (!currentDiscount && typeof window !== 'undefined') {
+      const storedDiscount = sessionStorage.getItem('discountPercent')
+      if (storedDiscount) {
+        const discountNum = parseInt(storedDiscount, 10)
+        if (!isNaN(discountNum) && discountNum > 0 && discountNum <= 100) {
+          currentDiscount = discountNum
+        }
+      }
+    }
+    
     if (isLoggedIn) {
       // If logged in, go directly to checkout with discount if available
-      const checkoutUrl = discountPercent 
-        ? `/checkout?planId=${planId}&discount=${discountPercent}`
+      const checkoutUrl = currentDiscount 
+        ? `/checkout?planId=${planId}&discount=${currentDiscount}`
         : `/checkout?planId=${planId}`
       router.push(checkoutUrl)
     } else {
       // If not logged in, store planId and discount, then open registration modal
       if (typeof window !== 'undefined') {
         sessionStorage.setItem('selectedPlanId', planId)
-        if (discountPercent) {
-          sessionStorage.setItem('discountPercent', discountPercent.toString())
+        if (currentDiscount) {
+          sessionStorage.setItem('discountPercent', currentDiscount.toString())
         }
       }
       openRegisterModal()
@@ -238,9 +250,11 @@ export default function PricingPage() {
     return (
       <div className="min-h-screen flex flex-col">
         <SharedNavbar />
+        {/* Top margin with black background */}
+        <div className="w-full h-24 bg-black"></div>
         <section 
           ref={sectionRef}
-          className="flex-1 pt-24 pb-16 px-4 flex items-center justify-center"
+          className="flex-1 pb-16 px-4 flex items-center justify-center"
           style={{
             backgroundImage: "url('/hero/middle-1.png')",
             backgroundSize: "cover",
@@ -259,9 +273,11 @@ export default function PricingPage() {
     return (
       <div className="min-h-screen flex flex-col">
         <SharedNavbar />
+        {/* Top margin with black background */}
+        <div className="w-full h-24 bg-black"></div>
         <section 
           ref={sectionRef}
-          className="flex-1 pt-24 pb-16 px-4"
+          className="flex-1 pb-16 px-4"
           style={{
             backgroundImage: "url('/hero/middle-1.png')",
             backgroundSize: "cover",
@@ -286,9 +302,11 @@ export default function PricingPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <SharedNavbar />
+      {/* Top margin with black background */}
+      <div className="w-full h-24 bg-black"></div>
       <section 
         ref={sectionRef}
-        className="flex-1 pt-24 pb-8 px-4"
+        className="flex-1 pb-8 px-4"
         style={{
           backgroundImage: "url('/hero/middle-1.png')",
           backgroundSize: "cover",

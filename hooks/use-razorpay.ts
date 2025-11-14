@@ -82,14 +82,24 @@ export const useRazorpay = () => {
   /**
    * Create payment order
    */
-  const createPaymentOrder = async (planId: string): Promise<PaymentOrder | null> => {
+  const createPaymentOrder = async (planId: string, amount?: number, discountPercent?: number): Promise<PaymentOrder | null> => {
     try {
       setIsLoading(true)
       setError(null)
 
       console.log('[Razorpay Hook] ===== CREATING PAYMENT ORDER =====')
       console.log('[Razorpay Hook] Plan ID:', planId)
+      console.log('[Razorpay Hook] Amount:', amount)
+      console.log('[Razorpay Hook] Discount:', discountPercent)
       console.log('[Razorpay Hook] Calling /api/payments/create-order')
+
+      const requestBody: any = { planId }
+      if (amount !== undefined) {
+        requestBody.amount = amount
+      }
+      if (discountPercent !== undefined) {
+        requestBody.discountPercent = discountPercent
+      }
 
       const response = await fetch('/api/payments/create-order', {
         method: 'POST',
@@ -97,9 +107,7 @@ export const useRazorpay = () => {
           'Content-Type': 'application/json',
         },
         credentials: 'include', // Include cookies
-        body: JSON.stringify({
-          planId,
-        }),
+        body: JSON.stringify(requestBody),
       })
 
       console.log('[Razorpay Hook] Response status:', response.status)
@@ -176,7 +184,7 @@ export const useRazorpay = () => {
     name?: string
     email?: string
     contact?: string
-  }) => {
+  }, amount?: number, discountPercent?: number) => {
     try {
       setIsLoading(true)
       setError(null)
@@ -187,8 +195,8 @@ export const useRazorpay = () => {
         throw new Error('Failed to load Razorpay SDK')
       }
 
-      // Create payment order
-      const order = await createPaymentOrder(planId)
+      // Create payment order with discounted amount if provided
+      const order = await createPaymentOrder(planId, amount, discountPercent)
       if (!order) {
         throw new Error('Failed to create payment order')
       }

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { User, Edit2, CreditCard, Bell, HelpCircle, LogOut } from "lucide-react"
+import { User, Edit2, CreditCard, Bell, Receipt, LogOut } from "lucide-react"
 import { SharedNavbar } from "@/components/shared-navbar"
 import Cookies from 'js-cookie'
 import apiClient from '@/lib/api/client'
@@ -13,7 +13,7 @@ import { ProfileTab } from "@/components/profile/profile-tab"
 import { EditProfileTab } from "@/components/profile/edit-profile-tab"
 import { SubscriptionTab } from "@/components/profile/subscription-tab"
 import { NotificationsTab } from "@/components/profile/notifications-tab"
-import { SupportTab } from "@/components/profile/support-tab"
+import { BillingTab } from "@/components/profile/billing-tab"
 
 export const dynamic = 'force-dynamic'
 
@@ -47,7 +47,7 @@ export default function ProfilePage() {
   // Check for tab query parameter on mount
   useEffect(() => {
     const tab = searchParams.get('tab')
-    if (tab && ['profile', 'edit-profile', 'subscription', 'notifications', 'support'].includes(tab)) {
+    if (tab && ['profile', 'edit-profile', 'subscription', 'notifications', 'billing'].includes(tab)) {
       setActiveTab(tab)
     }
   }, [searchParams])
@@ -209,8 +209,16 @@ export default function ProfilePage() {
     return (
       <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#0a0a0a] via-[#0f0f0f] to-[#0a0a0a]">
         <SharedNavbar />
-        <div className="flex-1 flex items-center justify-center pt-24">
-          <div className="text-white text-xl">Loading...</div>
+        {/* Top margin with black background */}
+        <div className="w-full h-24 bg-black"></div>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="relative">
+              <div className="w-16 h-16 border-4 border-orange-500/20 border-t-orange-500 rounded-full animate-spin"></div>
+              <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-orange-600 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '0.8s' }}></div>
+            </div>
+            <p className="text-white/80 text-lg font-medium" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '500' }}>Loading profile...</p>
+          </div>
         </div>
       </div>
     )
@@ -219,58 +227,67 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#0a0a0a] via-[#0f0f0f] to-[#0a0a0a] text-white">
       <SharedNavbar />
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12 max-w-7xl pt-24">
-        {/* Header */}
+      {/* Top margin with black background */}
+      <div className="w-full h-24 bg-black"></div>
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12 max-w-7xl">
+        {/* Professional Header */}
         <div className="mb-8 lg:mb-12">
-          <div className="flex items-center gap-4 mb-6">
-            <Button
-              variant="ghost"
-              onClick={() => router.push('/')}
-              className="text-gray-400 hover:text-white hover:bg-orange-500/10 border border-orange-500/20 rounded-lg px-4 py-2 transition-all duration-200"
-            >
-              ← Back
-            </Button>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                onClick={() => router.push('/')}
+                className="text-gray-400 hover:text-white hover:bg-orange-500/10 border border-orange-500/20 rounded-lg px-4 py-2 transition-all duration-200 hover:border-orange-500/40"
+              >
+                ← Back
+              </Button>
+            </div>
+            <div className="hidden md:block">
+              <h1 className="text-3xl font-bold text-white" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '700' }}>
+                Account Settings
+              </h1>
+              <p className="text-gray-400 text-sm mt-1">Manage your profile and preferences</p>
+            </div>
           </div>
-          
         </div>
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="bg-[#1a1a1a]/80 backdrop-blur-sm border border-orange-500/20 p-1.5 rounded-xl mb-8 lg:mb-12 h-auto flex-wrap gap-2">
+          <TabsList className="bg-[#1a1a1a]/90 backdrop-blur-md border border-orange-500/30 p-2 rounded-xl mb-8 lg:mb-12 h-auto flex-wrap gap-2 shadow-lg shadow-orange-500/5">
             <TabsTrigger 
               value="profile" 
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-orange-600 data-[state=active]:text-white text-gray-400 hover:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-orange-500/30 transition-all duration-200 px-4 py-2.5 rounded-lg font-medium text-sm"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-orange-600 data-[state=active]:text-white text-gray-400 hover:text-white hover:bg-white/5 data-[state=active]:shadow-lg data-[state=active]:shadow-orange-500/30 transition-all duration-300 px-4 py-2.5 rounded-lg font-medium text-sm data-[state=active]:scale-105"
             >
               <User className="w-4 h-4 mr-2" />
               <span className="hidden sm:inline">Profile</span>
             </TabsTrigger>
             <TabsTrigger 
               value="edit-profile"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-orange-600 data-[state=active]:text-white text-gray-400 hover:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-orange-500/30 transition-all duration-200 px-4 py-2.5 rounded-lg font-medium text-sm"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-orange-600 data-[state=active]:text-white text-gray-400 hover:text-white hover:bg-white/5 data-[state=active]:shadow-lg data-[state=active]:shadow-orange-500/30 transition-all duration-300 px-4 py-2.5 rounded-lg font-medium text-sm data-[state=active]:scale-105"
             >
               <Edit2 className="w-4 h-4 mr-2" />
               <span className="hidden sm:inline">Edit Profile</span>
             </TabsTrigger>
             <TabsTrigger 
               value="subscription"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-orange-600 data-[state=active]:text-white text-gray-400 hover:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-orange-500/30 transition-all duration-200 px-4 py-2.5 rounded-lg font-medium text-sm"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-orange-600 data-[state=active]:text-white text-gray-400 hover:text-white hover:bg-white/5 data-[state=active]:shadow-lg data-[state=active]:shadow-orange-500/30 transition-all duration-300 px-4 py-2.5 rounded-lg font-medium text-sm data-[state=active]:scale-105"
             >
               <CreditCard className="w-4 h-4 mr-2" />
               <span className="hidden sm:inline">Subscription</span>
             </TabsTrigger>
             <TabsTrigger 
               value="notifications"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-orange-600 data-[state=active]:text-white text-gray-400 hover:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-orange-500/30 transition-all duration-200 px-4 py-2.5 rounded-lg font-medium text-sm"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-orange-600 data-[state=active]:text-white text-gray-400 hover:text-white hover:bg-white/5 data-[state=active]:shadow-lg data-[state=active]:shadow-orange-500/30 transition-all duration-300 px-4 py-2.5 rounded-lg font-medium text-sm data-[state=active]:scale-105"
             >
               <Bell className="w-4 h-4 mr-2" />
               <span className="hidden sm:inline">Notifications</span>
             </TabsTrigger>
             <TabsTrigger 
-              value="support"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-orange-600 data-[state=active]:text-white text-gray-400 hover:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-orange-500/30 transition-all duration-200 px-4 py-2.5 rounded-lg font-medium text-sm"
+              value="billing"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-orange-600 data-[state=active]:text-white text-gray-400 hover:text-white hover:bg-white/5 data-[state=active]:shadow-lg data-[state=active]:shadow-orange-500/30 transition-all duration-300 px-4 py-2.5 rounded-lg font-medium text-sm data-[state=active]:scale-105"
             >
-              <HelpCircle className="w-4 h-4 mr-2" />
-              <span className="hidden sm:inline">Support</span>
+              <Receipt className="w-4 h-4 mr-2" />
+              <span className="hidden sm:inline">Billing & Invoice</span>
             </TabsTrigger>
             <div className="relative inline-block group">
               <TabsTrigger 
@@ -347,9 +364,9 @@ export default function ProfilePage() {
             <NotificationsTab />
           </TabsContent>
 
-          {/* Support Tab */}
-          <TabsContent value="support" className="mt-0">
-            <SupportTab />
+          {/* Billing & Invoice Tab */}
+          <TabsContent value="billing" className="mt-0">
+            <BillingTab />
           </TabsContent>
         </Tabs>
       </div>
