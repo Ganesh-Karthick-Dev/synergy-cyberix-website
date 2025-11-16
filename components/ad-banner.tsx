@@ -1,9 +1,8 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { useQuery } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
-import { getActiveAds } from '@/lib/api/website'
+import { useWebsiteData } from '@/hooks/use-website-data'
 import { trackAdImpression, trackAdClick, type Ad } from '@/lib/api/ads'
 import { X } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -61,14 +60,9 @@ export function AdBanner() {
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  // Fetch active ads
-  const { data: ads = [], isLoading, error } = useQuery({
-    queryKey: ['activeAds'],
-    queryFn: getActiveAds,
-    refetchInterval: 60000, // Refetch every minute
-    staleTime: 30000, // Consider data stale after 30 seconds
-    retry: 2,
-  })
+  // Fetch website data (includes ads) using shared hook
+  const { data: websiteData, isLoading, error } = useWebsiteData()
+  const ads = websiteData?.ads || []
 
   // Simple filter: show all ads that are active
   // For now, ignore date range checking - show all active ads

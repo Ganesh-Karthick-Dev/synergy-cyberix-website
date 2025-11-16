@@ -132,12 +132,6 @@ export default function PricingPage() {
   const handlePlanClick = (planId: string, e: React.MouseEvent) => {
     e.preventDefault()
     
-    // If user has active subscription, redirect to profile subscription page
-    if (hasActiveSubscription && isLoggedIn) {
-      router.push('/profile?tab=subscription')
-      return
-    }
-    
     // Get discount from state or sessionStorage
     let currentDiscount = discountPercent
     if (!currentDiscount && typeof window !== 'undefined') {
@@ -152,6 +146,7 @@ export default function PricingPage() {
     
     if (isLoggedIn) {
       // If logged in, go directly to checkout with discount if available
+      // Users can now purchase multiple plans regardless of active subscription
       const checkoutUrl = currentDiscount 
         ? `/checkout?planId=${planId}&discount=${currentDiscount}`
         : `/checkout?planId=${planId}`

@@ -9,12 +9,14 @@ import { loginUser, API_CONFIG } from '@/lib/api'
 import type { ApiError } from '@/lib/api/types'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useAuth } from "@/components/auth-context"
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { AuthCarousel } from "@/components/auth-carousel"
+import { initializeFCM, requestFCMToken } from '@/lib/firebase/fcm'
 
 function LoginModalContent() {
   const { isLoginModalOpen, closeLoginModal, switchToRegister } = useAuth()
   const searchParams = useSearchParams()
+  const router = useRouter()
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -52,13 +54,153 @@ function LoginModalContent() {
 
   // Login mutation with TanStack Query
   const loginMutation = useMutation({
-    mutationFn: (credentials: { email: string; password: string }) => {
-      return loginUser(credentials)
+    mutationFn: async (credentials: { email: string; password: string }) => {
+      // Try to get FCM token before login (if available)
+      let fcmToken: string | null = null
+      try {
+        // Try to get existing token from localStorage first
+        const storedToken = typeof window !== 'undefined' 
+          ? localStorage.getItem('fcmToken') 
+          : null
+        
+        if (storedToken && storedToken.trim().length > 0) {
+          fcmToken = storedToken
+          console.log('[Login] ✅ Using stored FCM token from localStorage:', storedToken.substring(0, 20) + '...')
+        } else {
+          // Ensure service worker is registered and ready before requesting token
+          console.log('[Login] 🔄 No stored FCM token, ensuring service worker is ready...')
+          console.log('[Login] 📋 Browser support check:', {
+            hasServiceWorker: 'serviceWorker' in navigator,
+            hasNotification: 'Notification' in window,
+          })
+          
+          // First, ensure service worker is registered
+          if ('serviceWorker' in navigator) {
+            try {
+              // Check if service worker is already registered
+              console.log('[Login] 🔍 Checking for existing service worker registration...')
+              let registration = await navigator.serviceWorker.getRegistration()
+              
+              if (!registration) {
+                console.log('[Login] 📝 Service worker not registered, registering now...')
+                const { registerServiceWorker } = await import('@/lib/firebase/service-worker')
+                registration = await registerServiceWorker()
+                if (!registration) {
+                  console.error('[Login] ❌ Service worker registration returned null')
+                }
+              } else {
+                console.log('[Login] ✅ Service worker already registered:', registration.scope)
+              }
+              
+              if (registration) {
+                // Wait for service worker to be ready
+                console.log('[Login] ⏳ Waiting for service worker to be ready...')
+                const readyRegistration = await navigator.serviceWorker.ready
+                console.log('[Login] ✅ Service worker is ready, requesting FCM token...')
+                console.log('[Login] 📋 Service worker state:', {
+                  scope: readyRegistration.scope,
+                  active: readyRegistration.active?.state,
+                  installing: readyRegistration.installing?.state,
+                  waiting: readyRegistration.waiting?.state,
+                })
+                
+                // Now try to get FCM token with a reasonable timeout (8 seconds - increased for reliability)
+                console.log('[Login] 🔑 Requesting FCM token (max 8 seconds)...')
+                const tokenPromise = requestFCMToken()
+                fcmToken = await Promise.race([
+                  tokenPromise,
+                  new Promise<string | null>((resolve) => {
+                    setTimeout(() => {
+                      console.warn('[Login] ⚠️ FCM token request timed out after 8 seconds')
+                      resolve(null)
+                    }, 8000)
+                  })
+                ])
+                
+                if (fcmToken && fcmToken.trim().length > 0) {
+                  console.log('[Login] ✅ Got FCM token before login:', fcmToken.substring(0, 20) + '...')
+                  // Store it temporarily
+                  if (typeof window !== 'undefined') {
+                    localStorage.setItem('fcmToken', fcmToken)
+                  }
+                } else {
+                  console.warn('[Login] ⚠️ FCM token not obtained before login (returned:', fcmToken, '), will try after login')
+                }
+              } else {
+                console.error('[Login] ❌ Service worker registration failed - registration is null')
+              }
+            } catch (swError) {
+              console.error('[Login] ❌ Service worker error:', swError)
+              if (swError instanceof Error) {
+                console.error('[Login] Error details:', {
+                  message: swError.message,
+                  stack: swError.stack,
+                  name: swError.name,
+                })
+              }
+              // Continue with login even if service worker fails
+            }
+          } else {
+            console.warn('[Login] ⚠️ Service workers not supported in this browser')
+          }
+        }
+      } catch (error) {
+        console.error('[Login] ❌ Failed to get FCM token before login:', error)
+        if (error instanceof Error) {
+          console.error('[Login] Error details:', {
+            message: error.message,
+            stack: error.stack,
+          })
+        }
+        // Continue with login even if FCM fails
+      }
+      
+      // Log what we're sending
+      console.log('[Login] 📤 Sending login request with FCM token:', fcmToken ? `YES (${fcmToken.substring(0, 20)}...)` : 'NO (null/undefined)')
+      
+      // Always include fcmToken in payload (even if null)
+      // Use null instead of undefined so axios will send it
+      const loginPayload: { email: string; password: string; fcmToken: string | null } = {
+        email: credentials.email,
+        password: credentials.password,
+        fcmToken: fcmToken ? fcmToken : null, // Always include, use null if not available
+      }
+      
+      console.log('[Login] 📦 Login payload prepared:', {
+        email: loginPayload.email,
+        hasPassword: !!loginPayload.password,
+        fcmToken: loginPayload.fcmToken ? `${loginPayload.fcmToken.substring(0, 20)}...` : 'null/undefined',
+      })
+      
+      return loginUser(loginPayload)
     },
-    onSuccess: (data) => {
-      console.log('[Login] Success:', data)
-      // Close modal
+    onSuccess: async (data) => {
+      console.log('[Login] ✅ Login successful:', data)
+      
+      // Close modal first
       closeLoginModal()
+      
+      // If FCM token wasn't sent with login, try to get it now and send it
+      const storedToken = typeof window !== 'undefined' 
+        ? localStorage.getItem('fcmToken') 
+        : null
+      
+      if (!storedToken) {
+        console.log('[Login] No FCM token was sent with login, initializing FCM now...')
+        // Initialize FCM after successful login (if not already sent)
+        // This will request token and store it on backend
+        initializeFCM().then((token) => {
+          if (token) {
+            console.log('[Login] ✅ FCM token obtained and stored after login')
+          } else {
+            console.warn('[Login] ⚠️ FCM token not obtained after login')
+          }
+        }).catch((error) => {
+          console.warn('[Login] ⚠️ FCM initialization failed (non-critical):', error)
+        })
+      } else {
+        console.log('[Login] ✅ FCM token was sent with login, already stored')
+      }
       
       // Check if there's a selected planId in sessionStorage
       const selectedPlanId = typeof window !== 'undefined' ? sessionStorage.getItem('selectedPlanId') : null
@@ -66,14 +208,16 @@ function LoginModalContent() {
       if (selectedPlanId) {
         // Clear the stored planId and redirect to checkout
         sessionStorage.removeItem('selectedPlanId')
+        // Use Next.js router to avoid full page reload
         setTimeout(() => {
-          window.location.href = `/checkout?planId=${selectedPlanId}`
-        }, 100)
+          router.push(`/checkout?planId=${selectedPlanId}`)
+        }, 500)
       } else {
-        // Reload page to update auth state
+        // Use Next.js router to avoid full page reload
+        // Small delay to allow FCM initialization to start
         setTimeout(() => {
-          window.location.reload()
-        }, 100)
+          router.push('/')
+        }, 300)
       }
     },
     onError: (error: any) => {

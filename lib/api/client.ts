@@ -32,11 +32,19 @@ apiClient.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`
     }
     
-    // Log request for debugging (only in development)
-    if (process.env.NODE_ENV === 'development') {
+    // Log request for debugging
+    // Always log login requests to see payload
+    const isLoginRequest = config.url?.includes('/api/auth/login')
+    if (isLoginRequest || process.env.NODE_ENV === 'development') {
+      const safeData = config.data ? {
+        ...config.data,
+        password: config.data.password ? '***' : undefined,
+      } : config.data
+      
       console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`, {
-        data: config.data,
+        data: safeData,
         withCredentials: config.withCredentials,
+        headers: config.headers,
       })
     }
     

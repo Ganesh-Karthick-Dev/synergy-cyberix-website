@@ -5,29 +5,7 @@ import { useRegistration } from "@/components/registration-context"
 import { useRouter } from "next/navigation"
 import Cookies from "js-cookie"
 import { useAuth } from "@/components/auth-context"
-import { useQuery } from "@tanstack/react-query"
-
-async function fetchActiveSubscription() {
-  try {
-    const response = await fetch('/api/subscription/active', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-      cache: 'no-store'
-    })
-
-    if (!response.ok) {
-      return null
-    }
-
-    const data = await response.json()
-    return data.data || null
-  } catch (error) {
-    return null
-  }
-}
+import { useActiveSubscription } from "@/hooks/use-subscription"
 
 export function OfferSnippet() {
   const router = useRouter()
@@ -35,15 +13,8 @@ export function OfferSnippet() {
   const [isVisible, setIsVisible] = useState(true)
   const isLoggedIn = Cookies.get('isAuthenticated') === 'true' || !!Cookies.get('accessToken')
 
-  // Fetch active subscription
-  const { data: activeSubscription } = useQuery({
-    queryKey: ['activeSubscription', 'offer-snippet'],
-    queryFn: fetchActiveSubscription,
-    enabled: isLoggedIn,
-    refetchInterval: 60000,
-    retry: false,
-    staleTime: 0,
-  })
+  // Fetch active subscription using shared hook
+  const { data: activeSubscription } = useActiveSubscription()
 
   // Handle CTA button click
   const handleCTAClick = () => {

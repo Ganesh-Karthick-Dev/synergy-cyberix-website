@@ -12,6 +12,10 @@ import { RegisterModal } from '@/components/register-modal'
 import { ScrollToTop } from '@/components/scroll-to-top'
 import { Chatbot } from '@/components/chatbot'
 import { AuthRedirectHandler } from '@/components/auth-redirect-handler'
+import { FCMProvider } from '@/components/fcm-provider'
+import { FCMInitializer } from '@/components/fcm-initializer'
+import { FCMMessageHandler } from '@/components/fcm-message-handler'
+import { NotificationPermissionAlert } from '@/components/notification-permission-alert'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -31,7 +35,11 @@ export default function RootLayout({
         <QueryProvider>
           <RegistrationProvider>
             <AuthProvider>
+              <FCMProvider />
+              <FCMInitializer />
+              <FCMMessageHandler />
               <AuthRedirectHandler />
+              <NotificationPermissionAlert />
               <AdBanner />
               {children}
               <ClientModalWrapper />
