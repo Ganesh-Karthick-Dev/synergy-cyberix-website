@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { MessageCircle, X, Send, Bot, User } from "lucide-react"
+import { MessageCircle, X, Send, Bot, User, Loader2 } from "lucide-react"
 
 interface Message {
   id: number
@@ -10,24 +10,13 @@ interface Message {
   timestamp: Date
 }
 
-const aiResponses = [
-  "Hello! I'm here to help you with any questions about our cybersecurity services. How can I assist you today?",
-  "Great question! Our AI-powered platform provides real-time vulnerability detection, phishing protection, and comprehensive security monitoring. Would you like to know more about any specific feature?",
-  "We offer multiple plans to suit different needs - from individual websites to enterprise solutions. All plans include our advanced AI threat detection and instant PDF reports.",
-  "Absolutely! You can start with a free trial that includes scanning your first 2 websites at no cost. No credit card required.",
-  "Our platform uses advanced machine learning algorithms trained on the latest threat intelligence to achieve 98% accuracy in vulnerability detection.",
-  "Yes, we provide REST API access and support integrations with popular security platforms, SIEM tools, and development workflows.",
-  "Our comprehensive scans typically complete in 5-15 minutes for websites, and 30-60 minutes for full infrastructure assessments. You can monitor progress in real-time.",
-  "Thank you for your interest! You can start your free trial by clicking the 'Start Free Security Scan' button on our homepage, or contact our support team for more information.",
-]
-
 const quickQuestions = [
-  "What services do you offer?",
-  "How much does it cost?",
-  "Is there a free trial?",
-  "How accurate is the detection?",
-  "Can I integrate with other tools?",
-  "How long does a scan take?",
+  "What is Cyberix?",
+  "How do I install Cyberix?",
+  "What security tools does Cyberix use?",
+  "How does WSL integration work?",
+  "What types of scans can I perform?",
+  "How do I generate reports?",
 ]
 
 export function Chatbot() {
@@ -35,12 +24,13 @@ export function Chatbot() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
-      text: "Hello! I'm your AI assistant. How can I help you with our cybersecurity services today?",
+      text: "Hello! I'm your Cyberix AI assistant. I can help you with questions about Cyberix features, installation, usage, and troubleshooting. How can I assist you today?",
       sender: "ai",
       timestamp: new Date(),
     },
   ])
   const [inputValue, setInputValue] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -55,9 +45,9 @@ export function Chatbot() {
     }
   }, [messages, isOpen])
 
-  const handleSendMessage = (text?: string) => {
+  const handleSendMessage = async (text?: string) => {
     const messageText = text || inputValue.trim()
-    if (!messageText) return
+    if (!messageText || isLoading) return
 
     // Add user message
     const userMessage: Message = {
@@ -68,18 +58,55 @@ export function Chatbot() {
     }
     setMessages((prev) => [...prev, userMessage])
     setInputValue("")
+    setIsLoading(true)
 
-    // Simulate AI thinking delay
-    setTimeout(() => {
-      const randomResponse = aiResponses[Math.floor(Math.random() * aiResponses.length)]
+    try {
+      // Prepare conversation history (excluding system message)
+      const conversationHistory = messages
+        .filter(msg => msg.id !== 1) // Exclude initial greeting
+        .map(msg => ({
+          sender: msg.sender,
+          text: msg.text
+        }))
+
+      // Call the API
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: messageText,
+          conversationHistory: conversationHistory
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error?.message || 'Failed to get response')
+      }
+
+      const data = await response.json()
+      
       const aiMessage: Message = {
         id: messages.length + 2,
-        text: randomResponse,
+        text: data.data?.response || data.response || "I apologize, but I couldn't generate a response. Please try again.",
         sender: "ai",
         timestamp: new Date(),
       }
       setMessages((prev) => [...prev, aiMessage])
-    }, 800)
+    } catch (error) {
+      console.error('Error sending message:', error)
+      const errorMessage: Message = {
+        id: messages.length + 2,
+        text: "I'm sorry, I encountered an error. Please try again later or check your connection.",
+        sender: "ai",
+        timestamp: new Date(),
+      }
+      setMessages((prev) => [...prev, errorMessage])
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleQuickQuestion = (question: string) => {
@@ -123,7 +150,7 @@ export function Chatbot() {
                   Cyberix AI Assistant
                 </h3>
                 <p className="text-orange-100 text-xs" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}>
-                  Online • Ready to help
+                  {isLoading ? 'Thinking...' : 'Online • Ready to help'}
                 </p>
               </div>
             </div>
@@ -166,13 +193,35 @@ export function Chatbot() {
                   }`}
                   style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}
                 >
-                  <p className="text-sm leading-relaxed">{message.text}</p>
-                  <span className="text-xs opacity-60 mt-1 block">
-                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </span>
+                  {message.sender === "ai" && isLoading && message.id === messages.length ? (
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <p className="text-sm">Thinking...</p>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.text}</p>
+                      <span className="text-xs opacity-60 mt-1 block">
+                        {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
             ))}
+            {isLoading && messages[messages.length - 1]?.sender === "user" && (
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-r from-gray-700 to-gray-800 border border-orange-500/30">
+                  <Bot className="w-4 h-4 text-orange-400" />
+                </div>
+                <div className="max-w-[75%] rounded-lg px-4 py-2.5 bg-gray-800/80 border border-white/10">
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-orange-400" />
+                    <p className="text-sm text-gray-300">Thinking...</p>
+                  </div>
+                </div>
+              </div>
+            )}
             <div ref={messagesEndRef} />
           </div>
 
@@ -187,7 +236,8 @@ export function Chatbot() {
                   <button
                     key={index}
                     onClick={() => handleQuickQuestion(question)}
-                    className="text-xs px-3 py-1.5 bg-white/5 hover:bg-orange-500/20 border border-white/10 hover:border-orange-500/30 text-gray-300 hover:text-orange-400 rounded-full transition-all duration-200"
+                    disabled={isLoading}
+                    className="text-xs px-3 py-1.5 bg-white/5 hover:bg-orange-500/20 border border-white/10 hover:border-orange-500/30 text-gray-300 hover:text-orange-400 rounded-full transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}
                   >
                     {question}
@@ -206,22 +256,27 @@ export function Chatbot() {
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
+                  if (e.key === "Enter" && !e.shiftKey && !isLoading) {
                     e.preventDefault()
                     handleSendMessage()
                   }
                 }}
-                placeholder="Type your message..."
-                className="flex-1 bg-gray-800/50 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-gray-400 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/30 transition-all duration-200"
+                placeholder="Ask about Cyberix..."
+                disabled={isLoading}
+                className="flex-1 bg-gray-800/50 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-gray-400 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/30 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}
               />
               <button
                 onClick={() => handleSendMessage()}
-                disabled={!inputValue.trim()}
+                disabled={!inputValue.trim() || isLoading}
                 className="w-10 h-10 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 disabled:from-gray-700 disabled:to-gray-800 disabled:cursor-not-allowed text-white rounded-lg flex items-center justify-center transition-all duration-200 shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40"
                 aria-label="Send message"
               >
-                <Send className="w-4 h-4" />
+                {isLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4" />
+                )}
               </button>
             </div>
           </div>
