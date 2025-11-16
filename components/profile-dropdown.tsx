@@ -2,9 +2,9 @@
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useMemo } from "react"
 import Cookies from 'js-cookie'
-import apiClient from '@/lib/api/client'
+import { useUserProfile } from '@/hooks/use-profile'
 
 interface ProfileDropdownProps {
   userEmail?: string
@@ -14,68 +14,56 @@ interface ProfileDropdownProps {
 
 export function ProfileDropdown({ userEmail, userName, userInitials }: ProfileDropdownProps) {
   const router = useRouter()
-  const [displayName, setDisplayName] = useState<string>('User')
-  const [initials, setInitials] = useState<string>('U')
-  const [hasFetched, setHasFetched] = useState(false)
+  const { data: profileData } = useUserProfile()
   
-  // Get user info from cookies, props, or API
-  useEffect(() => {
-    const updateUserInfo = async () => {
-      // First, try props or cookies
-      const cookieName = Cookies.get('userName')
-      const cookieEmail = Cookies.get('userEmail')
-      const isAuthenticated = Cookies.get('isAuthenticated') === 'true'
-      
-      let name = userName || cookieName
-      
-      // If we have a name from props or cookies, use it
-      if (name) {
-        setDisplayName(name)
-        setInitials(userInitials || name.charAt(0).toUpperCase())
-        return
+  // Get user info from props, cookies, or API (using shared hook)
+  const { displayName, initials } = useMemo(() => {
+    // First, try props
+    if (userName) {
+      return {
+        displayName: userName,
+        initials: userInitials || userName.charAt(0).toUpperCase()
       }
-      
-      // If authenticated but no name in cookies, try fetching from API
-      if (isAuthenticated && !hasFetched) {
-        try {
-          const response = await apiClient.get('/api/auth/profile')
-          const userData = response.data?.data
-          
-          if (userData) {
-            const fullName = userData.firstName && userData.lastName
-              ? `${userData.firstName} ${userData.lastName}`
-              : userData.firstName || userData.email?.split('@')[0] || 'User'
-            
-            setDisplayName(fullName)
-            setInitials(userInitials || fullName.charAt(0).toUpperCase())
-            
-            // Update cookies for future use
-            if (fullName && fullName !== 'User') {
-              Cookies.set('userName', fullName, { path: '/', expires: 7 })
-            }
-            if (userData.email) {
-              Cookies.set('userEmail', userData.email, { path: '/', expires: 7 })
-            }
-            
-            setHasFetched(true)
-            return
-          }
-        } catch (error) {
-          console.error('[ProfileDropdown] Error fetching user profile:', error)
-        }
-      }
-      
-      // Fallback to email or default
-      const fallbackName = userEmail || cookieEmail?.split('@')[0] || 'User'
-      setDisplayName(fallbackName)
-      setInitials(userInitials || fallbackName.charAt(0).toUpperCase())
     }
-
-    updateUserInfo()
-    // Check cookies periodically (less frequent than before)
-    const interval = setInterval(updateUserInfo, 2000)
-    return () => clearInterval(interval)
-  }, [userName, userEmail, userInitials, hasFetched])
+    
+    // Then try cookies
+    const cookieName = Cookies.get('userName')
+    const cookieEmail = Cookies.get('userEmail')
+    
+    if (cookieName) {
+      return {
+        displayName: cookieName,
+        initials: userInitials || cookieName.charAt(0).toUpperCase()
+      }
+    }
+    
+    // Then try API data (from shared hook)
+    if (profileData) {
+      const fullName = profileData.firstName && profileData.lastName
+        ? `${profileData.firstName} ${profileData.lastName}`
+        : profileData.firstName || profileData.email?.split('@')[0] || 'User'
+      
+      // Update cookies for future use
+      if (fullName && fullName !== 'User') {
+        Cookies.set('userName', fullName, { path: '/', expires: 7 })
+      }
+      if (profileData.email) {
+        Cookies.set('userEmail', profileData.email, { path: '/', expires: 7 })
+      }
+      
+      return {
+        displayName: fullName,
+        initials: userInitials || fullName.charAt(0).toUpperCase()
+      }
+    }
+    
+    // Fallback to email or default
+    const fallbackName = userEmail || cookieEmail?.split('@')[0] || 'User'
+    return {
+      displayName: fallbackName,
+      initials: userInitials || fallbackName.charAt(0).toUpperCase()
+    }
+  }, [userName, userEmail, userInitials, profileData])
 
   const handleProfileClick = () => {
     router.push('/profile')

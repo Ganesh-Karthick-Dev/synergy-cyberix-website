@@ -20,6 +20,7 @@ export interface LoginCredentials {
   email: string
   password: string
   deviceInfo?: string
+  fcmToken?: string
 }
 
 export interface User {

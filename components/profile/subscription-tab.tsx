@@ -1,11 +1,15 @@
 "use client"
 
-import { useQuery } from "@tanstack/react-query"
+import { useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Calendar, Crown, CheckCircle, AlertCircle, Loader2, Clock, CreditCard, Sparkles } from "lucide-react"
+import { Calendar, Crown, CheckCircle, AlertCircle, Loader2, Clock, CreditCard, Sparkles, Play, Package } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { getActivePlans, type ServicePlan } from "@/lib/api/website"
+import { type ServicePlan } from "@/lib/api/website"
+import { useActiveSubscription } from "@/hooks/use-subscription"
+import { useWebsiteData } from "@/hooks/use-website-data"
+import { usePurchasedPlans, useActivatePurchasedPlan } from "@/hooks/use-purchased-plans"
+import { formatDistanceToNow } from "date-fns"
 
 interface Subscription {
   id: string
@@ -22,29 +26,6 @@ interface Subscription {
   startDate: string
   endDate: string | null
   autoRenew: boolean
-}
-
-async function fetchActiveSubscription() {
-  // Note: We don't need to check for token client-side
-  // The API route will handle authentication server-side using cookies
-  // Cookies are automatically sent with credentials: 'include'
-  
-  const response = await fetch('/api/subscription/active', {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    credentials: 'include', // This sends cookies automatically
-    cache: 'no-store'
-  })
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}))
-    throw new Error(errorData.error?.message || 'Failed to fetch subscription')
-  }
-
-  const data = await response.json()
-  return data.data || null
 }
 
 function formatDate(dateString: string | null) {
@@ -105,19 +86,34 @@ const PLAN_HIERARCHY: Record<string, number> = {
 
 export function SubscriptionTab() {
   const router = useRouter()
-  const { data: subscription, isLoading, error } = useQuery({
-    queryKey: ['activeSubscription'],
-    queryFn: fetchActiveSubscription,
-    retry: 1,
-    refetchInterval: 60000, // Refetch every minute
-  })
+  // Use shared hook for active subscription
+  const { data: subscription, isLoading, error } = useActiveSubscription()
 
-  // Fetch all plans
-  const { data: allPlans, isLoading: plansLoading } = useQuery({
-    queryKey: ['allPlans'],
-    queryFn: getActivePlans,
-    retry: 1,
-  })
+  // Fetch purchased plans (queue)
+  const { data: purchasedPlans = [], isLoading: isLoadingPurchased, error: purchasedPlansError } = usePurchasedPlans()
+  const activatePlan = useActivatePurchasedPlan()
+
+  // Debug logging
+  useEffect(() => {
+    console.log('[Subscription Tab] Purchased Plans:', {
+      count: purchasedPlans.length,
+      plans: purchasedPlans,
+      isLoading: isLoadingPurchased,
+      error: purchasedPlansError,
+    })
+  }, [purchasedPlans, isLoadingPurchased, purchasedPlansError])
+
+  // Fetch website data (includes plans) using shared hook
+  const { data: websiteData, isLoading: plansLoading } = useWebsiteData()
+  const allPlans = websiteData?.plans || []
+
+  const handleActivatePlan = async (purchasedPlanId: string) => {
+    try {
+      await activatePlan.mutateAsync(purchasedPlanId)
+    } catch (error) {
+      console.error('Failed to activate plan:', error)
+    }
+  }
 
   const isActive = subscription && subscription.status === 'ACTIVE'
   const daysRemaining = subscription ? getDaysRemaining(subscription.endDate) : null
@@ -151,7 +147,95 @@ export function SubscriptionTab() {
           </div>
         ) : (
           <div className="space-y-6">
-            {/* All Plans Section - Show First */}
+            {/* Debug Info - Remove after fixing */}
+            {/* {process.env.NODE_ENV === 'development' && (
+              <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg text-xs text-blue-400">
+                <p>Debug: purchasedPlans.length = {purchasedPlans.length}</p>
+                <p>Debug: isLoadingPurchased = {isLoadingPurchased ? 'true' : 'false'}</p>
+                <p>Debug: error = {purchasedPlansError ? JSON.stringify(purchasedPlansError) : 'none'}</p>
+              </div>
+            )} */}
+
+            {/* Purchased Plans Queue - Always show this section */}
+            <div className="mb-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-1 h-8 bg-gradient-to-b from-orange-500 to-orange-600 rounded-full"></div>
+                <h3 className="text-xl font-bold text-white" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '700' }}>
+                  Purchased Plans Queue
+                </h3>
+                {purchasedPlans.length > 0 && (
+                  <span className="px-3 py-1 bg-orange-500/20 border border-orange-500/50 rounded-full text-sm text-orange-400 font-semibold">
+                    {purchasedPlans.length} {purchasedPlans.length === 1 ? 'Plan' : 'Plans'}
+                  </span>
+                )}
+              </div>
+                {currentPlanName === 'FREE' && (
+                  <div className="mb-6 p-4 bg-gradient-to-r from-orange-500/10 to-orange-600/10 border border-orange-500/30 rounded-xl">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="w-5 h-5 text-orange-400 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm font-semibold text-orange-300 mb-1">Activate Your Purchased Plan</p>
+                        <p className="text-sm text-gray-300">
+                          You have {purchasedPlans.length} purchased plan{purchasedPlans.length > 1 ? 's' : ''} ready to activate. Click "Activate Now" on any plan below to switch from Free plan.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div className="space-y-4">
+                  {purchasedPlans.map((purchasedPlan) => (
+                    <Card
+                      key={purchasedPlan.id}
+                      className="bg-gradient-to-br from-[#2a2a2a] to-[#252525] border border-orange-500/30 hover:border-orange-500/50 transition-all duration-300 overflow-hidden relative group"
+                    >
+                      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500/50 via-orange-500 to-orange-500/50"></div>
+                      <CardContent className="p-6">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className="p-2 rounded-lg bg-gradient-to-br from-orange-500/20 to-orange-600/20 border border-orange-500/30">
+                                <Package className="w-5 h-5 text-orange-400" />
+                              </div>
+                              <div>
+                                <h4 className="text-lg font-bold text-white" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}>
+                                  {formatPlanName(purchasedPlan.plan.name.toUpperCase())}
+                                </h4>
+                                <p className="text-sm text-gray-400">{formatBillingCycle(purchasedPlan.plan.billingCycle)}</p>
+                              </div>
+                              <span className="px-3 py-1 bg-yellow-500/20 border border-yellow-500/50 rounded-lg text-xs text-yellow-400 font-medium">
+                                Pending Activation
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-4 text-sm text-gray-400 mb-4">
+                              <span>${purchasedPlan.plan.price}</span>
+                              <span>•</span>
+                              <span>Purchased {formatDistanceToNow(new Date(purchasedPlan.createdAt), { addSuffix: true })}</span>
+                            </div>
+                            {purchasedPlan.plan.description && (
+                              <p className="text-sm text-gray-400 mb-4">{purchasedPlan.plan.description}</p>
+                            )}
+                          </div>
+                          <Button
+                            onClick={() => handleActivatePlan(purchasedPlan.id)}
+                            disabled={activatePlan.isPending}
+                            className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white flex-shrink-0"
+                          >
+                            {activatePlan.isPending ? (
+                              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                            ) : (
+                              <Play className="w-4 h-4 mr-2" />
+                            )}
+                            Activate Now
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* All Plans Section */}
             {!plansLoading && allPlans && allPlans.length > 0 && (
               <div>
                 <div className="flex items-center gap-3 mb-6">
@@ -377,27 +461,15 @@ export function SubscriptionTab() {
                   )}
 
                   {/* Actions */}
-                  {!isExpired && (
-                    <div className="mt-6 pt-6 border-t border-gray-700/50">
-                      <div className="flex items-start gap-3 p-4 rounded-xl bg-blue-500/5 border border-blue-500/20">
-                        <AlertCircle className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
-                        <p className="text-sm text-gray-300 leading-relaxed">
-                          Your subscription is active. You cannot purchase a new plan until it expires.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                  {isExpired && (
-                    <div className="mt-6 pt-6 border-t border-gray-700/50">
-                      <Button 
-                        onClick={() => router.push('/pricing')}
-                        className="w-full bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-orange-500/50 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
-                        style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}
-                      >
-                        Renew Subscription
-                      </Button>
-                    </div>
-                  )}
+                  <div className="mt-6 pt-6 border-t border-gray-700/50">
+                    <Button 
+                      onClick={() => router.push('/pricing')}
+                      className="w-full bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-orange-500/50 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                      style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}
+                    >
+                      Purchase New Plan
+                    </Button>
+                  </div>
                 </div>
               </div>
               ) : (
@@ -430,6 +502,7 @@ export function SubscriptionTab() {
                 </div>
               )}
             </div>
+
           </div>
         )}
       </CardContent>

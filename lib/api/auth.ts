@@ -2,6 +2,7 @@ import apiClient from './client'
 import { API_CONFIG } from './config'
 import type { LoginCredentials, LoginResponse, RegisterPayload, RegisterResponse } from './types'
 import Cookies from 'js-cookie'
+import { cleanupFCM } from '@/lib/firebase/fcm'
 
 /**
  * Authentication API Functions
@@ -14,10 +15,34 @@ import Cookies from 'js-cookie'
  */
 export const loginUser = async (credentials: LoginCredentials): Promise<LoginResponse> => {
   try {
+    // Log the login payload (safely, without password)
+    // Always include fcmToken in log (even if null/undefined)
+    const safePayload: any = {
+      email: credentials.email,
+      password: '***', // Don't log actual password
+      fcmToken: credentials.fcmToken 
+        ? `${credentials.fcmToken.substring(0, 20)}...` 
+        : (credentials.fcmToken === null ? null : undefined), // Preserve null vs undefined
+    }
+    console.log('[Auth] Login API Payload:', {
+      endpoint: API_CONFIG.ENDPOINTS.AUTH.LOGIN,
+      fullUrl: `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AUTH.LOGIN}`,
+      method: 'POST',
+      payload: safePayload,
+      hasDeviceInfo: !!credentials.deviceInfo,
+      hasFcmToken: !!credentials.fcmToken,
+    })
+    console.log('[Auth] Full Login Payload (password hidden, FCM token partial):', JSON.stringify(safePayload, null, 2))
+    
     const response = await apiClient.post<LoginResponse>(
       API_CONFIG.ENDPOINTS.AUTH.LOGIN,
       credentials
     )
+    
+    console.log('[Auth] Login API Response:', {
+      status: response.status,
+      data: response.data,
+    })
     
     const data = response.data
     
@@ -79,23 +104,48 @@ export const registerUser = async (payload: RegisterPayload): Promise<RegisterRe
 /**
  * Logout user
  * Backend clears HTTP-only cookies (accessToken, refreshToken)
- * We clear readable cookies locally
+ * We clear readable cookies locally and remove FCM token
  */
 export const logoutUser = async (): Promise<void> => {
   try {
+    // IMPORTANT: Remove FCM token BEFORE calling logout endpoint
+    // This ensures user is still authenticated for the FCM token removal API call
+    console.log('[Auth] Starting logout process...')
+    
+    try {
+      console.log('[Auth] Step 1: Removing FCM token...')
+      await cleanupFCM()
+      console.log('[Auth] ✅ FCM token removed successfully')
+    } catch (error: any) {
+      console.error('[Auth] ❌ FCM cleanup failed:', error)
+      console.error('[Auth] Error details:', {
+        message: error?.message,
+        response: error?.response?.data,
+        status: error?.response?.status,
+      })
+      // Continue with logout even if FCM cleanup fails
+    }
+    
     // Call logout endpoint - backend will clear HTTP-only cookies
+    console.log('[Auth] Step 2: Calling logout endpoint...')
     await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.LOGOUT)
-    console.log('[Auth] Logout successful - backend cleared HTTP-only cookies')
-  } catch (error) {
-    console.warn('[Auth] Logout endpoint failed, clearing local cookies:', error)
+    console.log('[Auth] ✅ Logout successful - backend cleared HTTP-only cookies')
+  } catch (error: any) {
+    console.error('[Auth] ❌ Logout endpoint failed:', error)
+    console.error('[Auth] Error details:', {
+      message: error?.message,
+      response: error?.response?.data,
+      status: error?.response?.status,
+    })
   } finally {
     // Always clear readable cookies regardless of API call result
+    console.log('[Auth] Step 3: Clearing local cookies...')
     Cookies.remove('accessToken', { path: '/' })
     Cookies.remove('refreshToken', { path: '/' })
     Cookies.remove('isAuthenticated', { path: '/' })
     Cookies.remove('userEmail', { path: '/' })
     Cookies.remove('userName', { path: '/' })
-    console.log('[Auth] All readable auth cookies cleared')
+    console.log('[Auth] ✅ All readable auth cookies cleared')
   }
 }
 

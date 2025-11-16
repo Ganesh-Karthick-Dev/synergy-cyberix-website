@@ -8,29 +8,7 @@ import { useAuth } from "@/components/auth-context"
 import Cookies from 'js-cookie'
 import { ProfileDropdown } from "@/components/profile-dropdown"
 import { useRouter } from "next/navigation"
-import { useQuery } from "@tanstack/react-query"
-
-async function fetchActiveSubscription() {
-  try {
-    const response = await fetch('/api/subscription/active', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-      cache: 'no-store'
-    })
-
-    if (!response.ok) {
-      return null
-    }
-
-    const data = await response.json()
-    return data.data || null
-  } catch (error) {
-    return null
-  }
-}
+import { useActiveSubscription } from "@/hooks/use-subscription"
 
 export function HeroSection() {
   const router = useRouter()
@@ -42,15 +20,8 @@ export function HeroSection() {
   const { openLoginModal, openRegisterModal } = useAuth()
   const sectionRef = useRef<HTMLElement>(null)
 
-  // Fetch active subscription
-  const { data: activeSubscription } = useQuery({
-    queryKey: ['activeSubscription', 'hero-section'],
-    queryFn: fetchActiveSubscription,
-    enabled: isLoggedIn,
-    refetchInterval: 60000,
-    retry: false,
-    staleTime: 0,
-  })
+  // Fetch active subscription using shared hook
+  const { data: activeSubscription } = useActiveSubscription()
 
   // Handle CTA button click
   const handleCTAClick = () => {

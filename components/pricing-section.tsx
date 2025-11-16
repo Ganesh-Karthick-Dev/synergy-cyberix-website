@@ -8,40 +8,9 @@ import { Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import ElectricBorder from './ElectricBorder'
 import { useAuth } from "@/components/auth-context"
-import { getActivePlans, type ServicePlan } from "@/lib/api/website"
-
-async function fetchActiveSubscription() {
-  // Note: We don't need to check for token client-side
-  // The API route will handle authentication server-side using cookies
-  // Cookies are automatically sent with credentials: 'include'
-  
-  try {
-    const response = await fetch('/api/subscription/active', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include', // This sends cookies automatically
-      cache: 'no-store'
-    })
-
-    console.log('[Pricing] Subscription API response status:', response.status)
-
-    if (!response.ok) {
-      console.log('[Pricing] Subscription API error:', response.status)
-      return null
-    }
-
-    const data = await response.json()
-    console.log('[Pricing] Subscription API response data:', data)
-    const subscription = data.data || null
-    console.log('[Pricing] Parsed subscription:', subscription)
-    return subscription
-  } catch (error) {
-    console.error('[Pricing] Error fetching subscription:', error)
-    return null
-  }
-}
+import { type ServicePlan } from "@/lib/api/website"
+import { useActiveSubscription } from "@/hooks/use-subscription"
+import { useWebsiteData } from "@/hooks/use-website-data"
 
 export function PricingSection() {
   const router = useRouter()
@@ -51,15 +20,8 @@ export function PricingSection() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const { openRegisterModal } = useAuth()
 
-  // Fetch active subscription - Always try to fetch (API will return null if not authenticated)
-  const { data: activeSubscription, isLoading: isLoadingSubscription } = useQuery({
-    queryKey: ['activeSubscription', 'pricing'],
-    queryFn: fetchActiveSubscription,
-    enabled: true, // Always enabled - API will handle auth
-    refetchInterval: 60000, // Refetch every minute
-    retry: false, // Don't retry on error
-    staleTime: 0, // Always consider stale to ensure fresh data
-  })
+  // Fetch active subscription using shared hook
+  const { data: activeSubscription, isLoading: isLoadingSubscription } = useActiveSubscription()
 
   // Check if subscription is active and valid - Use useMemo to ensure proper calculation
   const subscriptionState = useMemo(() => {
@@ -169,12 +131,7 @@ export function PricingSection() {
   const handlePlanClick = (planId: string, e: React.MouseEvent) => {
     e.preventDefault()
     
-    // If user has active subscription, redirect to profile subscription page
-    if (hasActiveSubscription && isLoggedIn) {
-      router.push('/profile?tab=subscription')
-      return
-    }
-    
+    // Users can now purchase multiple plans regardless of active subscription
     if (isLoggedIn) {
       // If logged in, go directly to checkout
       router.push(`/checkout?planId=${planId}`)
@@ -187,13 +144,9 @@ export function PricingSection() {
     }
   }
 
-  // Fetch active service plans
-  const { data: plansData = [], isLoading } = useQuery({
-    queryKey: ['activePlans'],
-    queryFn: getActivePlans,
-    refetchInterval: 300000, // Refetch every 5 minutes
-    staleTime: 60000, // Consider data stale after 1 minute
-  })
+  // Fetch website data (includes plans) using shared hook
+  const { data: websiteData, isLoading } = useWebsiteData()
+  const plansData = websiteData?.plans || []
 
   useEffect(() => {
     const observer = new IntersectionObserver(
