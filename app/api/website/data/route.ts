@@ -4,6 +4,8 @@ import { NextRequest, NextResponse } from 'next/server'
  * Unified Website API Route
  * Returns both active ads and active service plans for the website
  */
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4005'

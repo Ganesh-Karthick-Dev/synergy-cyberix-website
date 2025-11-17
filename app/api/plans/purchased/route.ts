@@ -4,6 +4,8 @@ import { cookies } from 'next/headers'
 // Use the same backend URL as other API routes
 const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4005'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     const cookieStore = await cookies()

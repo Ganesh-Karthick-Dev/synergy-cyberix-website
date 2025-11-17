@@ -8,6 +8,7 @@ import { useAuth } from "@/components/auth-context"
 import Cookies from 'js-cookie'
 import { ProfileDropdown } from "@/components/profile-dropdown"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { useActiveSubscription } from "@/hooks/use-subscription"
 
 export function HeroSection() {
@@ -224,8 +225,8 @@ export function HeroSection() {
             <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-orange-600 group-hover:w-full transition-all duration-300"></span>
           </a>
           
-          <a 
-            href="#warning" 
+          <Link 
+            href="/contact" 
             className="relative text-white hover:text-orange-400 transition-all duration-300 text-lg font-semibold group overflow-hidden px-2 py-1"
             style={{ 
               fontFamily: 'Orbitron, sans-serif', 
@@ -237,7 +238,7 @@ export function HeroSection() {
             {/* Scanning effect on hover */}
             <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 to-orange-600/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out"></div>
             <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-orange-600 group-hover:w-full transition-all duration-300"></span>
-          </a>
+          </Link>
           
           <a 
             href="/download" 
@@ -345,9 +346,9 @@ export function HeroSection() {
               {/* Scanning effect on hover */}
               <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 to-orange-600/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out"></div>
             </a>
-            <a 
+            <Link 
               onClick={() => setMobileNavOpen(false)} 
-              href="#warning" 
+              href="/contact" 
               className="relative block text-white hover:text-orange-400 transition-all duration-300 text-base font-semibold py-2 border-b border-white/10 hover:border-orange-500/50 overflow-hidden group"
               style={{ 
                 fontFamily: 'Orbitron, sans-serif', 
@@ -358,7 +359,7 @@ export function HeroSection() {
               <span className="relative z-10">Contact us</span>
               {/* Scanning effect on hover */}
               <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 to-orange-600/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out"></div>
-            </a>
+            </Link>
             <a 
               onClick={() => setMobileNavOpen(false)} 
               href="/download" 
