@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -14,8 +14,6 @@ import { EditProfileTab } from "@/components/profile/edit-profile-tab"
 import { SubscriptionTab } from "@/components/profile/subscription-tab"
 import { NotificationsTab } from "@/components/profile/notifications-tab"
 import { BillingTab } from "@/components/profile/billing-tab"
-
-export const dynamic = 'force-dynamic'
 
 interface UserInfo {
   email?: string
@@ -37,7 +35,7 @@ interface EditProfileForm {
   location: string
 }
 
-export default function ProfilePage() {
+function ProfileContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
@@ -371,5 +369,27 @@ export default function ProfilePage() {
         </Tabs>
       </div>
     </div>
+  )
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#0a0a0a] via-[#0f0f0f] to-[#0a0a0a]">
+        <SharedNavbar />
+        <div className="w-full h-24 bg-black"></div>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="relative">
+              <div className="w-16 h-16 border-4 border-orange-500/20 border-t-orange-500 rounded-full animate-spin"></div>
+              <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-orange-600 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '0.8s' }}></div>
+            </div>
+            <p className="text-white/80 text-lg font-medium" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '500' }}>Loading profile...</p>
+          </div>
+        </div>
+      </div>
+    }>
+      <ProfileContent />
+    </Suspense>
   )
 }

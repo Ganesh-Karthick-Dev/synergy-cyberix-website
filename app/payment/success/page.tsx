@@ -1,13 +1,13 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { CheckCircle, ArrowRight, Home, Receipt } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { SharedNavbar } from "@/components/shared-navbar"
 import { FooterSection } from "@/components/footer-section"
 
-export default function PaymentSuccessPage() {
+function PaymentSuccessContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const [countdown, setCountdown] = useState(10)
@@ -219,5 +219,25 @@ export default function PaymentSuccessPage() {
       </div>
       <FooterSection />
     </div>
+  )
+}
+
+export default function PaymentSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex flex-col" style={{
+        backgroundImage: "url('/hero/middle-1.png')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat"
+      }}>
+        <SharedNavbar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-white text-xl">Loading...</div>
+        </div>
+      </div>
+    }>
+      <PaymentSuccessContent />
+    </Suspense>
   )
 }

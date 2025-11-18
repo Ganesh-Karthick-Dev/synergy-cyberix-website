@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { useQuery } from "@tanstack/react-query"
 import { Check, Lock, CreditCard, Shield, ArrowLeft, User, Mail, Phone, Building, Loader2 } from "lucide-react"
@@ -11,8 +11,7 @@ import { getActivePlans, type ServicePlan } from "@/lib/api/website"
 import { useRazorpay } from "@/hooks/use-razorpay"
 import Cookies from "js-cookie"
 
-
-export default function CheckoutPage() {
+function CheckoutContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const planId = searchParams.get('planId')
@@ -485,6 +484,25 @@ export default function CheckoutPage() {
       </div>
       <FooterSection />
     </div>
+  )
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex flex-col" style={{
+        backgroundImage: "url('/hero/middle-1.png')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}>
+        <SharedNavbar />
+        <div className="flex-1 flex items-center justify-center pt-24">
+          <div className="text-white text-xl">Loading...</div>
+        </div>
+      </div>
+    }>
+      <CheckoutContent />
+    </Suspense>
   )
 }
 
