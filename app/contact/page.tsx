@@ -108,19 +108,18 @@ export default function ContactPage() {
                 <div className="space-y-4">
                   <div className="flex items-start gap-4">
                     <div className="w-12 h-12 bg-orange-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Mail className="w-6 h-6 text-orange-500" />
+                      <MapPin className="w-6 h-6 text-orange-500" />
                     </div>
                     <div>
                       <h3 className="text-lg font-semibold text-white mb-1" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}>
-                        Email
+                        Address
                       </h3>
-                      <a 
-                        href="mailto:contact@cyberix.com"
-                        className="text-white/80 hover:text-orange-400 transition-colors"
-                        style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}
-                      >
-                        contact@cyberix.com
-                      </a>
+                      <p className="text-white/80" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}>
+                        No 721/2, Venky complex,<br />
+                        Second floor, cross-cut road,<br />
+                        Seth Narang Das Layout,<br />
+                        Coimbatore – 641 012.
+                      </p>
                     </div>
                   </div>
 
@@ -132,29 +131,47 @@ export default function ContactPage() {
                       <h3 className="text-lg font-semibold text-white mb-1" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}>
                         Phone
                       </h3>
-                      <a 
-                        href="tel:+1555CYBERIX"
-                        className="text-white/80 hover:text-orange-400 transition-colors"
-                        style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}
-                      >
-                        +1 (555) CYBERIX
-                      </a>
+                      <div className="space-y-2">
+                        <a 
+                          href="tel:+919786557739"
+                          className="block text-white/80 hover:text-orange-400 transition-colors"
+                          style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}
+                        >
+                          +91 97865 57739
+                        </a>
+                        <a 
+                          href="tel:+919585125566"
+                          className="block text-white/80 hover:text-orange-400 transition-colors"
+                          style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}
+                        >
+                          +91 95851 25566
+                        </a>
+                        <a 
+                          href="tel:+916380072252"
+                          className="block text-white/80 hover:text-orange-400 transition-colors"
+                          style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}
+                        >
+                          +91 63800 72252
+                        </a>
+                      </div>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-4">
                     <div className="w-12 h-12 bg-orange-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <MapPin className="w-6 h-6 text-orange-500" />
+                      <Mail className="w-6 h-6 text-orange-500" />
                     </div>
                     <div>
                       <h3 className="text-lg font-semibold text-white mb-1" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '600' }}>
-                        Address
+                        Email
                       </h3>
-                      <p className="text-white/80" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}>
-                        Cyberix Security Center<br />
-                        Silicon Valley, CA 94000<br />
-                        United States
-                      </p>
+                      <a 
+                        href="mailto:info@webnoxdigital.com"
+                        className="text-white/80 hover:text-orange-400 transition-colors"
+                        style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}
+                      >
+                        info@webnoxdigital.com
+                      </a>
                     </div>
                   </div>
                 </div>
