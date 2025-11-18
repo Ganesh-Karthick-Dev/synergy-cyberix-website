@@ -183,28 +183,50 @@ const FooterSection = memo(() => {
               <div className="flex items-start gap-3 group">
                 <MapPin className="w-5 h-5 text-orange-500 mt-0.5 flex-shrink-0 group-hover:scale-110 transition-transform" />
                 <p className="text-gray-300 leading-relaxed" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}>
-                  Cyberix Security Center,<br />
-                  Silicon Valley, CA 94000
+                  No 721/2, Venky complex,<br />
+                  Second floor, cross-cut road,<br />
+                  Seth Narang Das Layout,<br />
+                  Coimbatore – 641 012.
                 </p>
               </div>
               <div className="flex items-center gap-3 group">
                 <Phone className="w-5 h-5 text-orange-500 flex-shrink-0 group-hover:scale-110 transition-transform" />
                 <a 
-                  href="tel:+1555CYBERIX" 
+                  href="tel:+919786557739" 
                   className="text-gray-300 hover:text-orange-400 transition-colors"
                   style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}
                 >
-                  +1 (555) CYBERIX
+                  +91 97865 57739
+                </a>
+              </div>
+              <div className="flex items-center gap-3 group">
+                <Phone className="w-5 h-5 text-orange-500 flex-shrink-0 group-hover:scale-110 transition-transform" />
+                <a 
+                  href="tel:+919585125566" 
+                  className="text-gray-300 hover:text-orange-400 transition-colors"
+                  style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}
+                >
+                  +91 95851 25566
+                </a>
+              </div>
+              <div className="flex items-center gap-3 group">
+                <Phone className="w-5 h-5 text-orange-500 flex-shrink-0 group-hover:scale-110 transition-transform" />
+                <a 
+                  href="tel:+916380072252" 
+                  className="text-gray-300 hover:text-orange-400 transition-colors"
+                  style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}
+                >
+                  +91 63800 72252
                 </a>
               </div>
               <div className="flex items-center gap-3 group">
                 <Mail className="w-5 h-5 text-orange-500 flex-shrink-0 group-hover:scale-110 transition-transform" />
                 <a 
-                  href="mailto:contact@cyberix.com" 
+                  href="mailto:info@webnoxdigital.com" 
                   className="text-gray-300 hover:text-orange-400 transition-colors"
                   style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}
                 >
-                  contact@cyberix.com
+                  info@webnoxdigital.com
                 </a>
               </div>
             </div>
@@ -221,7 +243,9 @@ const FooterSection = memo(() => {
             {/* Social Media Icons */}
             <div className="flex items-center gap-4">
               <a
-                href="#"
+                href="https://webnox.in/"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="group relative w-12 h-12 bg-gradient-to-br from-gray-800 to-gray-900 rounded-full flex items-center justify-center border border-gray-700 hover:border-orange-500 transition-all duration-300 hover:scale-110 hover:shadow-lg hover:shadow-orange-500/20"
                 aria-label="Facebook"
               >
@@ -229,7 +253,9 @@ const FooterSection = memo(() => {
                 <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
               </a>
               <a
-                href="#"
+                href="https://webnox.in/"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="group relative w-12 h-12 bg-gradient-to-br from-gray-800 to-gray-900 rounded-full flex items-center justify-center border border-gray-700 hover:border-orange-500 transition-all duration-300 hover:scale-110 hover:shadow-lg hover:shadow-orange-500/20"
                 aria-label="Instagram"
               >
@@ -237,7 +263,9 @@ const FooterSection = memo(() => {
                 <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
               </a>
               <a
-                href="#"
+                href="https://webnox.in/"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="group relative w-12 h-12 bg-gradient-to-br from-gray-800 to-gray-900 rounded-full flex items-center justify-center border border-gray-700 hover:border-orange-500 transition-all duration-300 hover:scale-110 hover:shadow-lg hover:shadow-orange-500/20"
                 aria-label="Twitter"
               >
@@ -245,7 +273,9 @@ const FooterSection = memo(() => {
                 <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
               </a>
               <a
-                href="#"
+                href="https://webnox.in/"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="group relative w-12 h-12 bg-gradient-to-br from-gray-800 to-gray-900 rounded-full flex items-center justify-center border border-gray-700 hover:border-orange-500 transition-all duration-300 hover:scale-110 hover:shadow-lg hover:shadow-orange-500/20"
                 aria-label="YouTube"
               >
