@@ -49,17 +49,33 @@ export default function ContactPage() {
         body: JSON.stringify(formData),
       })
 
-      const data = await response.json()
+      let data
+      try {
+        data = await response.json()
+      } catch (parseError) {
+        // If response is not JSON, show a user-friendly message
+        if (!response.ok) {
+          throw new Error(`Server error: ${response.status}`)
+        }
+        throw new Error('Invalid response from server')
+      }
 
-      if (data.success) {
+      if (response.ok && data.success) {
         setSubmitMessage({ type: 'success', text: data.message || "Thank you for your message! We'll get back to you soon." })
         setFormData({ name: "", email: "", subject: "", message: "" })
       } else {
-        setSubmitMessage({ type: 'error', text: data.error?.message || 'Failed to send message. Please try again.' })
+        const errorMessage = data.error?.message || "We couldn't send your message right now. Please try again later or contact us directly using the information provided."
+        setSubmitMessage({ type: 'error', text: errorMessage })
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting contact form:', error)
-      setSubmitMessage({ type: 'error', text: 'Failed to send message. Please try again.' })
+      // Show user-friendly error message instead of technical errors
+      const errorMsg = error?.message || String(error) || ''
+      if (errorMsg.toLowerCase().includes('fetch') || errorMsg.toLowerCase().includes('network') || errorMsg.toLowerCase().includes('failed to fetch')) {
+        setSubmitMessage({ type: 'error', text: "We're having trouble connecting to our server. Please check your internet connection and try again, or contact us directly using the information provided." })
+      } else {
+        setSubmitMessage({ type: 'error', text: "We're sorry, but we couldn't send your message right now. Please try again later or contact us directly using the information provided." })
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -197,9 +213,9 @@ export default function ContactPage() {
                 <div className={`mb-4 p-4 rounded-lg ${
                   submitMessage.type === 'success' 
                     ? 'bg-green-500/20 border border-green-500/50 text-green-400' 
-                    : 'bg-red-500/20 border border-red-500/50 text-red-400'
+                    : 'bg-orange-500/20 border border-orange-500/50 text-orange-300'
                 }`}>
-                  <p className="text-sm font-medium">{submitMessage.text}</p>
+                  <p className="text-sm font-medium" style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: '400' }}>{submitMessage.text}</p>
                 </div>
               )}
               <form onSubmit={handleSubmit} className="space-y-4">
