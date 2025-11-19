@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createServerApiClient } from '@/lib/api/server-client'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,32 +15,21 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4005'
+    const apiClient = createServerApiClient(request)
+    const response = await apiClient.get('/api/payments/history')
 
-    const response = await fetch(`${backendUrl}/api/payments/history`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Cookie': request.headers.get('cookie') || ''
-      },
-      credentials: 'include'
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json()
-      return NextResponse.json(
-        { success: false, error: errorData.error || { message: 'Failed to fetch payment history', statusCode: response.status } },
-        { status: response.status }
-      )
-    }
-
-    const data = await response.json()
-    return NextResponse.json(data)
+    return NextResponse.json(response.data)
   } catch (error: any) {
     console.error('[Payment History API] Error:', error)
+    const status = error.response?.status || 500
+    const errorData = error.response?.data || {}
+    
     return NextResponse.json(
-      { success: false, error: { message: 'Internal server error', statusCode: 500 } },
-      { status: 500 }
+      { 
+        success: false, 
+        error: errorData.error || { message: 'Internal server error', statusCode: status } 
+      },
+      { status }
     )
   }
 }

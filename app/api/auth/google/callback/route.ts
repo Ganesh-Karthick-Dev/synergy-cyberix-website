@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getApiBaseUrl } from '@/lib/api/config';
 
 /**
  * Next.js API Route Handler for Google OAuth Callback
@@ -14,7 +15,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // Get the backend API URL from environment
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4005';
+    const backendUrl = getApiBaseUrl();
     console.log('🔵 [Website Callback] Backend URL:', backendUrl);
     
     // Get all query parameters from the request

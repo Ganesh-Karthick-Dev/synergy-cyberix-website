@@ -1,15 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
-
-// Use the same backend URL as other API routes
-const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4005'
+import { createServerApiClient } from '@/lib/api/server-client'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = await cookies()
-    const token = cookieStore.get('accessToken')?.value
+    const cookies = request.cookies
+    const token = cookies.get('accessToken')?.value
 
     if (!token) {
       return NextResponse.json(
@@ -18,27 +15,21 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const response = await fetch(`${backendUrl}/api/plans/purchased`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      cache: 'no-store',
-    })
+    const apiClient = createServerApiClient(request)
+    const response = await apiClient.get('/api/plans/purchased')
 
-    const data = await response.json()
-
-    if (!response.ok) {
-      return NextResponse.json(data, { status: response.status })
-    }
-
-    return NextResponse.json(data)
+    return NextResponse.json(response.data, { status: response.status })
   } catch (error: any) {
     console.error('Error fetching purchased plans:', error)
+    const status = error.response?.status || 500
+    const errorData = error.response?.data || {}
+    
     return NextResponse.json(
-      { success: false, error: { message: error.message || 'Failed to fetch purchased plans', statusCode: 500 } },
-      { status: 500 }
+      { 
+        success: false, 
+        error: errorData.error || { message: error.message || 'Failed to fetch purchased plans', statusCode: status } 
+      },
+      { status }
     )
   }
 }

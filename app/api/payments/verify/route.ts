@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createServerApiClient } from '@/lib/api/server-client'
 
 /**
  * Verify Payment API Route
@@ -6,8 +7,6 @@ import { NextRequest, NextResponse } from 'next/server'
  */
 export async function POST(request: NextRequest) {
   try {
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4005'
-
     // Get request body
     const body = await request.json()
     const { razorpayOrderId, razorpayPaymentId, razorpaySignature } = body
@@ -26,18 +25,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get auth token from cookies - detailed logging
     const cookies = request.cookies
-    console.log('[Payment Verify API] ===== VERIFY AUTH CHECK =====')
-    console.log('[Payment Verify API] All cookies received:', Object.keys(cookies.getAll()).length, 'cookies')
-    console.log('[Payment Verify API] Cookie names:', Object.keys(cookies.getAll()))
-    console.log('[Payment Verify API] accessToken cookie exists:', cookies.get('accessToken') ? 'YES' : 'NO')
-
     const accessToken = cookies.get('accessToken')?.value
 
     if (!accessToken) {
-      console.log('[Payment Verify API] ❌ NO ACCESS TOKEN FOUND')
-      console.log('[Payment Verify API] Available cookies:', Object.keys(cookies.getAll()))
       return NextResponse.json(
         {
           success: false,
@@ -50,58 +41,35 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log('[Payment Verify API] ✅ Access token found, length:', accessToken.length)
-
-    // Forward request to backend
-    const response = await fetch(`${backendUrl}/api/payments/verify`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`,
-        'Cookie': request.headers.get('cookie') || ''
-      },
-      body: JSON.stringify({
-        razorpayOrderId,
-        razorpayPaymentId,
-        razorpaySignature
-      })
+    const apiClient = createServerApiClient(request)
+    const response = await apiClient.post('/api/payments/verify', {
+      razorpayOrderId,
+      razorpayPaymentId,
+      razorpaySignature
     })
-
-    if (!response.ok) {
-      const errorData = await response.json()
-      return NextResponse.json(
-        {
-          success: false,
-          error: {
-            message: errorData.error?.message || 'Payment verification failed',
-            statusCode: response.status
-          }
-        },
-        { status: response.status }
-      )
-    }
-
-    const data = await response.json()
 
     return NextResponse.json(
       {
         success: true,
-        data: data.data,
+        data: response.data.data,
         message: 'Payment verified successfully'
       },
       { status: 200 }
     )
   } catch (error: any) {
     console.error('[Payment API] Error verifying payment:', error)
+    const status = error.response?.status || 500
+    const errorData = error.response?.data || {}
+    
     return NextResponse.json(
       {
         success: false,
         error: {
-          message: error.message || 'Failed to verify payment',
-          statusCode: 500
+          message: errorData.error?.message || error.message || 'Failed to verify payment',
+          statusCode: status
         }
       },
-      { status: 500 }
+      { status }
     )
   }
 }

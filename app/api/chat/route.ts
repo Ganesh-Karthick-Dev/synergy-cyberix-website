@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createServerApiClient } from '@/lib/api/server-client'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -20,35 +21,25 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4005'
-
-    const response = await fetch(`${backendUrl}/api/chat`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ message, conversationHistory }),
+    const apiClient = createServerApiClient(request)
+    const response = await apiClient.post('/api/chat', {
+      message,
+      conversationHistory,
     })
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: errorData.error || { message: 'Failed to process chat message', statusCode: response.status } 
-        },
-        { status: response.status }
-      )
-    }
-
-    const data = await response.json()
-    return NextResponse.json(data, { status: response.status })
+    return NextResponse.json(response.data, { status: response.status })
 
   } catch (error: any) {
     console.error('[API/Chat] Error:', error)
-    return NextResponse.json(
-      { success: false, error: { message: error.message || 'Internal server error', statusCode: 500 } },
-      { status: 500 }
+    const status = error.response?.status || 500
+    const errorData = error.response?.data || {}
+    
+      return NextResponse.json(
+        { 
+          success: false, 
+        error: errorData.error || { message: error.message || 'Internal server error', statusCode: status } 
+      },
+      { status }
     )
   }
 }

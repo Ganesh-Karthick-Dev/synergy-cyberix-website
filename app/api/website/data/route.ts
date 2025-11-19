@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createServerApiClient } from '@/lib/api/server-client'
 
 /**
  * Unified Website API Route
@@ -8,41 +9,23 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   try {
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4005'
+    const apiClient = createServerApiClient(request)
     
     // Fetch both active ads and active plans in parallel
     const [adsResponse, plansResponse] = await Promise.all([
-      fetch(`${backendUrl}/api/ads?status=active`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        cache: 'no-store',
-      }),
-      fetch(`${backendUrl}/api/plans?status=active`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        cache: 'no-store',
-      }),
+      apiClient.get('/api/ads?status=active').catch((err) => ({ data: { data: [] }, status: err.response?.status || 500 })),
+      apiClient.get('/api/plans?status=active').catch((err) => ({ data: { data: [] }, status: err.response?.status || 500 })),
     ])
 
     // Parse responses
-    let ads = []
-    let plans = []
+    const ads = adsResponse.data?.data || []
+    const plans = plansResponse.data?.data || []
 
-    if (adsResponse.ok) {
-      const adsData = await adsResponse.json()
-      ads = adsData.data || []
-    } else {
+    if (adsResponse.status !== 200) {
       console.error('[Website API] Failed to fetch ads:', adsResponse.status)
     }
 
-    if (plansResponse.ok) {
-      const plansData = await plansResponse.json()
-      plans = plansData.data || []
-    } else {
+    if (plansResponse.status !== 200) {
       console.error('[Website API] Failed to fetch plans:', plansResponse.status)
     }
 

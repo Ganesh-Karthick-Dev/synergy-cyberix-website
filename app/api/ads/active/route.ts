@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   try {
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4005'
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://backend.cyberixai.com/'
     
     // Fetch active ads from backend
     const response = await fetch(`${backendUrl}/api/ads?status=active`, {
